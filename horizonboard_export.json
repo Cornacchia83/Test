@@ -1,0 +1,24 @@
+{
+  "projekte": [
+    {
+      "id": 1,
+      "name": "Mein Team",
+      "kuerzel": "THIT",
+      "aufgaben": [
+        {
+          "titel": "Aufgabe 1",
+          "status": "In Bearbeitung"
+        },
+        {
+          "titel": "Aufgabe 2",
+          "status": "Startbereit"
+        },
+        {
+          "titel": "Backlog Aufgabe",
+          "status": "Startbereit"
+        }
+      ]
+    }
+  ],
+  "export_date": "2026-03-23 21:06:23"
+}
