@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Kontakte – HorizonBoard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">👥 Kontakte</span>
+  <a href="{{ url_for('neuer_kontakt') }}" class="btn btn-primary btn-sm">＋ Neuer Kontakt</a>
+</div>
+<div class="page-body">
+  <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+    <table class="data-table">
+      <thead>
+        <tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th>Firma</th><th style="width:80px;"></th></tr>
+      </thead>
+      <tbody>
+        {% for k in kontakte %}
+        <tr>
+          <td><strong>{{ k.name }}</strong></td>
+          <td><a href="mailto:{{ k.email }}" style="color:var(--sidebar-accent);">{{ k.email or '–' }}</a></td>
+          <td>{{ k.telefon or '–' }}</td>
+          <td>{{ k.firma or '–' }}</td>
+          <td>
+            <div class="row-actions">
+              <a href="{{ url_for('kontakt_bearbeiten', kontakt_id=k.id) }}" class="btn btn-ghost btn-icon btn-sm">✏️</a>
+              <form method="post" action="{{ url_for('kontakt_loeschen', kontakt_id=k.id) }}"
+                    data-confirm="Kontakt '{{ k.name }}' löschen?" style="display:inline;">
+                <button type="submit" class="btn btn-ghost btn-icon btn-sm">🗑️</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state" style="padding:30px 0;">
+          <div class="empty-state-icon">👥</div>
+          <h3>Keine Kontakte</h3>
+        </div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Kanban Board (Wochenansicht) - {{ projekt.name }} - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <div><span style="font-size: 0.8em; color: #666;">Projekt:</span><h2>{{ projekt.name }} - Kanban Board (Wochenansicht)</h2></div>
+    <div class="header-actions"><a href="{{ url_for('neue_aufgabe_form', projekt_id=projekt.id) }}" class="quick-add-btn" style="width: auto; padding: 8px 15px;">+ Neue Aufgabe</a></div>
+</header>
+<div class="kanban-board-swimlanes">
+    {% for wochen_key in wochen_reihenfolge %}
+    <div class="kanban-swimlane">
+        <h3 class="swimlane-title {% if wochen_labels[wochen_key].startswith('KW ' + today.isocalendar()[1]|string) %}current-week{% endif %}">{{ wochen_labels[wochen_key] }}</h3>
+        <div class="kanban-week-columns">
+            {% for spalte in spalten %}
+            <div class="kanban-column" id="column-{{ spalte.id }}-week-{{ wochen_key[0] }}-{{ wochen_key[1] }}">
+                <h4 class="kanban-column-title">{{ spalte.name }} {% set aufgaben_in_zelle = aufgaben_nach_woche_spalte.get(wochen_key, {}).get(spalte.id, []) %}<span class="task-count">({{ aufgaben_in_zelle|length }})</span></h4>
+                <div class="kanban-cards" data-spalte-id="{{ spalte.id }}" data-woche-key="{{ wochen_key[0] }}-{{ wochen_key[1] }}">
+                    {% for aufgabe in aufgaben_in_zelle %}
+                    <div class="kanban-card urgency-{{ aufgabe.dringlichkeit.value.lower() }}" data-task-id="{{ aufgabe.id }}">
+                        <div class="card-content">
+                            <span class="card-title">{{ aufgabe.titel }}</span>
+                            <div class="card-meta">
+                                 <span class="urgency-tag urgency-{{ aufgabe.dringlichkeit.value.lower() }}">{{ aufgabe.dringlichkeit.value }}</span>
+                                {% if aufgabe.faelligkeitsdatum and wochen_key[0] != 0 %}<span class="due-date {% if aufgabe.faelligkeitsdatum.date() < today %}overdue{% endif %}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="vertical-align: middle; margin-right: 3px;"><path d="M8 1.75a.75.75 0 0 1 .75.75v5.5c0 .414-.336.75-.75.75h-5.5a.75.75 0 0 1 0-1.5h4.75V2.5a.75.75 0 0 1 .75-.75Z M8 16A8 8 0 1 1 8 0a8 8 0 0 1 0 16ZM8 1.5A6.5 6.5 0 1 0 8 14.5A6.5 6.5 0 0 0 8 1.5Z"></path></svg> {{ aufgabe.faelligkeitsdatum.strftime('%d.%m.%y') }}</span>{% endif %}
+                                {# NEU: "Wartet auf" Icon/Text anzeigen #}
+                                {% if aufgabe.wartet_auf_kontakt %}
+                                    <span class="waits-for" title="Wartet auf {{ aufgabe.wartet_auf_kontakt.name }}">
+                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" fill="#dc3545"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z"></path><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13Z"></path></svg>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                         <a href="{{ url_for('bearbeite_aufgabe_form', aufgaben_id=aufgabe.id) }}" class="edit-card-link" title="Bearbeiten">✎</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{# CSS wie vorher, evtl. .waits-for ergänzen #}
+<style>
+    /* ... (alle bisherigen Kanban-Styles) ... */
+    .card-meta .waits-for {
+        display: inline-flex;
+        align-items: center;
+        /* Optional: Hintergrund etc. */
+         /* background-color: #ffebee; */
+         /* padding: 1px 4px; */
+         /* border-radius: 3px; */
+    }
+</style>
+{% endblock %}

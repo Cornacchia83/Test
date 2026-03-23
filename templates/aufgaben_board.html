@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}Aufgaben – {{ projekt.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title"><span class="page-title-icon">📋</span> Aufgaben</span>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="btn btn-primary btn-sm" data-open-modal="modal-neue-aufgabe">＋ Neue Aufgabe</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-tabs">
+    <span class="toolbar-tab active" data-view="liste">Hauptansicht</span>
+    <a class="toolbar-tab" href="{{ url_for('aufgaben_kanban', projekt_id=projekt.id) }}">Kanban-Ansicht</a>
+    <a class="toolbar-tab" href="{{ url_for('sprints_liste', projekt_id=projekt.id) }}">Alle Sprints</a>
+  </div>
+</div>
+
+<div class="page-body">
+  <!-- SPRINTS als Gruppen -->
+  {% for sprint in sprints %}
+  {% set aufgaben = sprint_aufgaben.get(sprint.id, []) %}
+  <div class="group-container group-sprint" data-group-id="sprint-{{ sprint.id }}">
+    <div class="group-header">
+      <span class="group-toggle">▼</span>
+      <span style="color:#579bfc;font-size:14px;">🏃</span>
+      <span>{{ sprint.name }}</span>
+      {% if sprint.ist_aktiv %}<span class="sprint-active-badge">● Aktiv</span>{% endif %}
+      <span class="group-count">{{ aufgaben|length }} Aufgaben</span>
+      {% if sprint.enddatum %}
+      <span style="margin-left:auto;font-size:11px;color:var(--text-light);">
+        bis {{ sprint.enddatum.strftime('%d.%m.%Y') }}
+      </span>
+      {% endif %}
+    </div>
+    <div class="group-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:32px;"></th>
+            <th>Aufgabe</th>
+            <th>Status</th>
+            <th>Priorität</th>
+            <th>Typ</th>
+            <th>Aufgaben-ID</th>
+            <th>Gesch. SP</th>
+            <th>Akt. SP</th>
+            <th>Epic</th>
+            <th style="width:80px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in aufgaben %}
+          <tr>
+            <td><div class="checkbox-cell"><input type="checkbox" {% if a.erledigt_am %}checked{% endif %}></div></td>
+            <td>
+              <a class="task-title-link" href="{{ url_for('aufgabe_detail', aufgaben_id=a.id) }}">{{ a.titel }}</a>
+              {% if a.ungeplant %}<span class="tag" style="font-size:10px;margin-left:4px;">Ungeplant</span>{% endif %}
+            </td>
+            <td>
+              <span class="badge {{ a.status_klasse }}"
+                    data-inline-field="status"
+                    data-entity-type="aufgabe"
+                    data-entity-id="{{ a.id }}"
+                    data-options='[{% for s in AUFGABEN_STATUS %}{"label":"{{ s }}","value":"{{ s }}","klasse":"{{ STATUS_KLASSEN[s] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+                {{ a.status }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {{ a.prio_klasse }}"
+                    data-inline-field="prioritaet"
+                    data-entity-type="aufgabe"
+                    data-entity-id="{{ a.id }}"
+                    data-options='[{% for p in PRIORITAETEN %}{"label":"{{ p }}","value":"{{ p }}","klasse":"{{ PRIO_KLASSEN[p] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+                {{ a.prioritaet or '–' }}
+              </span>
+            </td>
+            <td>
+              {% if a.aufgaben_typ %}
+              <span class="badge {{ a.typ_klasse }}"
+                    data-inline-field="aufgaben_typ"
+                    data-entity-type="aufgabe"
+                    data-entity-id="{{ a.id }}"
+                    data-options='[{% for t in AUFGABEN_TYPEN %}{"label":"{{ t }}","value":"{{ t }}","klasse":"{{ TYP_KLASSEN[t] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+                {{ a.aufgaben_typ }}
+              </span>
+              {% else %}
+              <span class="badge status-default"
+                    data-inline-field="aufgaben_typ"
+                    data-entity-type="aufgabe"
+                    data-entity-id="{{ a.id }}"
+                    data-options='[{% for t in AUFGABEN_TYPEN %}{"label":"{{ t }}","value":"{{ t }}","klasse":"{{ TYP_KLASSEN[t] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>–</span>
+              {% endif %}
+            </td>
+            <td><span class="nr-tag">{{ a.aufgaben_nr or '–' }}</span></td>
+            <td>{{ a.story_points_geschaetzt or '–' }}</td>
+            <td>{{ a.story_points_aktuell or '–' }}</td>
+            <td>{% if a.epic %}<span class="tag">{{ a.epic.name }}</span>{% else %}–{% endif %}</td>
+            <td>
+              <div class="row-actions">
+                <a href="{{ url_for('aufgabe_detail', aufgaben_id=a.id) }}" class="btn btn-ghost btn-icon btn-sm" title="Details">✏️</a>
+                <form method="post" action="{{ url_for('aufgabe_loeschen', aufgaben_id=a.id) }}"
+                      data-confirm="Aufgabe '{{ a.titel }}' wirklich löschen?" style="display:inline;">
+                  <input type="hidden" name="next_url" value="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}">
+                  <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Löschen">🗑️</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" style="text-align:center;color:var(--text-light);padding:16px;font-size:12px;">Keine Aufgaben in diesem Sprint</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="add-row">＋ Aufgabe hinzufügen</div>
+      <div class="inline-add-form hidden">
+        <form method="post" action="{{ url_for('aufgabe_erstellen') }}">
+          <input type="hidden" name="projekt_id" value="{{ projekt.id }}">
+          <input type="hidden" name="sprint_id" value="{{ sprint.id }}">
+          <input type="hidden" name="next_url" value="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}">
+          <input type="text" name="titel" placeholder="Aufgabentitel..." required>
+          <select name="status">
+            {% for s in AUFGABEN_STATUS %}<option value="{{ s }}"{% if s=='Startbereit' %} selected{% endif %}>{{ s }}</option>{% endfor %}
+          </select>
+          <select name="prioritaet">
+            {% for p in PRIORITAETEN %}<option value="{{ p }}"{% if p=='Mittel' %} selected{% endif %}>{{ p }}</option>{% endfor %}
+          </select>
+          <select name="aufgaben_typ">
+            <option value="">– Typ –</option>
+            {% for t in AUFGABEN_TYPEN %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+          <select name="epic_id">
+            <option value="">– Epic –</option>
+            {% for e in epics %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary btn-sm">Hinzufügen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- BACKLOG -->
+  <div class="group-container group-backlog" data-group-id="backlog-{{ projekt.id }}">
+    <div class="group-header">
+      <span class="group-toggle">▼</span>
+      <span>📥</span>
+      <span>Backlog</span>
+      <span class="group-count">{{ backlog_aufgaben|length }} Aufgaben</span>
+    </div>
+    <div class="group-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:32px;"></th>
+            <th>Aufgabe</th>
+            <th>Status</th>
+            <th>Priorität</th>
+            <th>Typ</th>
+            <th>Aufgaben-ID</th>
+            <th>Gesch. SP</th>
+            <th>Akt. SP</th>
+            <th>Epic</th>
+            <th style="width:80px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in backlog_aufgaben %}
+          <tr>
+            <td><div class="checkbox-cell"><input type="checkbox"></div></td>
+            <td><a class="task-title-link" href="{{ url_for('aufgabe_detail', aufgaben_id=a.id) }}">{{ a.titel }}</a></td>
+            <td>
+              <span class="badge {{ a.status_klasse }}" data-inline-field="status" data-entity-type="aufgabe" data-entity-id="{{ a.id }}"
+                    data-options='[{% for s in AUFGABEN_STATUS %}{"label":"{{ s }}","value":"{{ s }}","klasse":"{{ STATUS_KLASSEN[s] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>{{ a.status }}</span>
+            </td>
+            <td>
+              <span class="badge {{ a.prio_klasse }}" data-inline-field="prioritaet" data-entity-type="aufgabe" data-entity-id="{{ a.id }}"
+                    data-options='[{% for p in PRIORITAETEN %}{"label":"{{ p }}","value":"{{ p }}","klasse":"{{ PRIO_KLASSEN[p] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>{{ a.prioritaet or '–' }}</span>
+            </td>
+            <td><span class="badge {{ a.typ_klasse or 'status-default' }}" data-inline-field="aufgaben_typ" data-entity-type="aufgabe" data-entity-id="{{ a.id }}"
+                    data-options='[{% for t in AUFGABEN_TYPEN %}{"label":"{{ t }}","value":"{{ t }}","klasse":"{{ TYP_KLASSEN[t] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>{{ a.aufgaben_typ or '–' }}</span></td>
+            <td><span class="nr-tag">{{ a.aufgaben_nr or '–' }}</span></td>
+            <td>{{ a.story_points_geschaetzt or '–' }}</td>
+            <td>{{ a.story_points_aktuell or '–' }}</td>
+            <td>{% if a.epic %}<span class="tag">{{ a.epic.name }}</span>{% else %}–{% endif %}</td>
+            <td>
+              <div class="row-actions">
+                <a href="{{ url_for('aufgabe_detail', aufgaben_id=a.id) }}" class="btn btn-ghost btn-icon btn-sm">✏️</a>
+                <form method="post" action="{{ url_for('aufgabe_loeschen', aufgaben_id=a.id) }}" data-confirm="Löschen?" style="display:inline;">
+                  <input type="hidden" name="next_url" value="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}">
+                  <button type="submit" class="btn btn-danger btn-icon btn-sm">🗑️</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="10" style="text-align:center;color:var(--text-light);padding:16px;font-size:12px;">Backlog ist leer</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="add-row">＋ Aufgabe hinzufügen</div>
+      <div class="inline-add-form hidden">
+        <form method="post" action="{{ url_for('aufgabe_erstellen') }}">
+          <input type="hidden" name="projekt_id" value="{{ projekt.id }}">
+          <input type="hidden" name="next_url" value="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}">
+          <input type="text" name="titel" placeholder="Aufgabentitel..." required>
+          <select name="status">{% for s in AUFGABEN_STATUS %}<option>{{ s }}</option>{% endfor %}</select>
+          <select name="prioritaet">{% for p in PRIORITAETEN %}<option>{{ p }}</option>{% endfor %}</select>
+          <button type="submit" class="btn btn-primary btn-sm">Hinzufügen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if not sprints and not backlog_aufgaben %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📋</div>
+    <h3>Noch keine Aufgaben</h3>
+    <p>Erstelle deinen ersten Sprint und füge Aufgaben hinzu.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- MODAL: Neue Aufgabe -->
+<div id="modal-neue-aufgabe" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">＋ Neue Aufgabe</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <form method="post" action="{{ url_for('aufgabe_erstellen') }}">
+      <input type="hidden" name="projekt_id" value="{{ projekt.id }}">
+      <input type="hidden" name="next_url" value="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}">
+      <div class="form-group">
+        <label>Titel *</label>
+        <input type="text" name="titel" required placeholder="Aufgabentitel...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Sprint</label>
+          <select name="sprint_id">
+            <option value="">– Backlog –</option>
+            {% for s in sprints %}<option value="{{ s.id }}" {% if s.ist_aktiv %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Epic</label>
+          <select name="epic_id">
+            <option value="">– Kein Epic –</option>
+            {% for e in epics %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status">{% for s in AUFGABEN_STATUS %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select>
+        </div>
+        <div class="form-group">
+          <label>Priorität</label>
+          <select name="prioritaet">{% for p in PRIORITAETEN %}<option value="{{ p }}" {% if p=='Mittel' %}selected{% endif %}>{{ p }}</option>{% endfor %}</select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Typ</label>
+          <select name="aufgaben_typ">
+            <option value="">– Kein Typ –</option>
+            {% for t in AUFGABEN_TYPEN %}<option>{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Gesch. Story Points</label>
+          <input type="number" name="story_points_geschaetzt" min="0" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Beschreibung</label>
+        <textarea name="beschreibung" rows="3" placeholder="Optionale Beschreibung..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Erstellen</button>
+        <button type="button" class="btn btn-secondary modal-close">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

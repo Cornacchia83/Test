@@ -1,0 +1,255 @@
+/* static/style.css - Überarbeitete Version */
+
+/* --- Globale Stile & Resets --- */
+:root {
+    --blau-apple: #007aff;
+    --blau-apple-dunkel: #005ecb;
+    --grau-hintergrund: #f6f6f7;
+    --grau-sidebar: #f5f5f7; /* Leicht angepasst */
+    --grau-rand: #d1d1d6;  /* Angepasst */
+    --grau-rand-hell: #e5e5e5;
+    --grau-text-dunkel: #1d1d1f;
+    --grau-text-mittel: #3c3c43;
+    --grau-text-hell: #8a8a8e;
+    --grau-element-hintergrund: #f0f0f5;
+    --gruen-erfolg: #34c759;
+    --gruen-erfolg-hell: #e8f5e9;
+    --rot-fehler: #ff3b30;
+    --rot-fehler-hell: #ffebee;
+    --orange-warnung: #ff9500;
+    --orange-warnung-hell: #fff8e1;
+
+    --schriftart: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius-standard: 8px; /* Einheitliche Rundung */
+    --radius-klein: 6px;
+}
+
+body {
+    margin: 0;
+    font-family: var(--schriftart);
+    background-color: var(--grau-hintergrund);
+    color: var(--grau-text-dunkel);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 15px; /* Basis-Schriftgröße */
+    line-height: 1.5;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+a { color: var(--blau-apple); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* --- App Layout --- */
+.app-container { display: flex; height: 100vh; }
+
+/* --- Sidebar --- */
+.sidebar {
+    width: 260px;
+    background-color: var(--grau-sidebar);
+    padding: 25px 20px; /* Etwas mehr Padding oben/unten */
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--grau-rand);
+    overflow-y: auto;
+}
+.sidebar h1 {
+    font-size: 1.6em; /* Größer */
+    font-weight: 700; /* Fett */
+    margin: 0 0 35px 0; /* Mehr Abstand unten */
+}
+.sidebar h1 a { color: inherit; text-decoration: none; }
+.sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+.sidebar nav li a {
+    display: flex; /* Für Icons etc. */
+    align-items: center;
+    padding: 10px 15px; /* Mehr Padding */
+    margin-bottom: 6px;
+    color: var(--grau-text-mittel);
+    border-radius: var(--radius-klein);
+    font-weight: 500; /* Etwas dicker */
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar nav li a:hover { background-color: #e5e5e5; color: var(--grau-text-dunkel); text-decoration: none; }
+.sidebar nav li.active > a { /* Style für aktiven Hauptlink */
+    background-color: var(--blau-apple);
+    color: white;
+    font-weight: 600;
+}
+/* Sub-Navigation (Board Link) */
+.sidebar nav li ul { margin: 4px 0 8px 15px; list-style: none; padding-left: 0; }
+.sidebar nav li ul a { padding: 5px 10px 5px 20px; /* Eingrückt */ font-size: 0.9em; font-weight: 400;}
+.sidebar nav li ul li.active-sub a { font-weight: 600; color: var(--blau-apple); background: none; }
+/* Trenner und Projektüberschrift */
+.sidebar hr { border: none; border-top: 1px solid var(--grau-rand); margin: 25px 0; }
+.sidebar h4 {
+    padding: 10px 15px 5px 15px; margin: 15px 0 8px 0; font-size: 0.8em;
+    text-transform: uppercase; color: var(--grau-text-hell); font-weight: 600; letter-spacing: 0.5px;
+}
+/* Erledigte Projekte */
+.sidebar nav li.projekt-erledigt a {
+    color: var(--grau-text-hell);
+    font-style: italic;
+    /* text-decoration: line-through; */ /* Optional */
+}
+.sidebar nav li.projekt-erledigt.active > a {
+    background-color: var(--grau-sidebar); /* Kein blauer Hintergrund */
+    color: var(--grau-text-hell);
+    font-weight: 400;
+}
+.sidebar-footer { margin-top: auto; padding-top: 20px; }
+.quick-add-btn {
+    display: block; width: 100%; padding: 12px; background-color: var(--blau-apple);
+    color: white; border: none; border-radius: var(--radius-standard); font-size: 1em;
+    font-weight: 500; cursor: pointer; transition: background-color 0.2s ease;
+    text-align: center; text-decoration: none;
+}
+.quick-add-btn:hover { background-color: var(--blau-apple-dunkel); text-decoration: none; }
+
+/* --- Main Content --- */
+.main-content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+.main-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--grau-rand);
+}
+.main-header h2 { margin: 0; font-size: 1.8em; font-weight: 600; /* Dickerer Titel */ }
+.projekt-status { font-size: 0.9em; font-style: italic; color: var(--grau-text-hell); margin-left: 8px; }
+.projekt-status.erledigt { color: var(--gruen-erfolg); }
+.header-actions { display: flex; align-items: center; gap: 12px; /* Mehr Abstand */ }
+.header-actions .action-btn, .header-actions .quick-add-btn {
+    padding: 9px 18px; /* Größere Buttons */ border-radius: var(--radius-standard); text-decoration: none;
+    font-size: 0.95em; font-weight: 500; cursor: pointer; display: inline-flex;
+    align-items: center; white-space: nowrap; border: 1px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+/* Styling der Header Buttons spezifischer */
+.header-actions .board-link { background-color: white; border-color: var(--grau-rand); color: var(--grau-text-mittel); }
+.header-actions .board-link:hover { background-color: #f8f8f8; border-color: #c0c0c0; }
+.header-actions .quick-add-btn { background-color: var(--blau-apple); color: white; border: none; }
+.header-actions .quick-add-btn:hover { background-color: var(--blau-apple-dunkel); }
+.header-actions .complete-projekt-btn { background-color: var(--gruen-erfolg-hell); color: var(--gruen-erfolg); border-color: #c3e6cb; }
+.header-actions .complete-projekt-btn:hover { background-color: #d4edda; }
+.header-actions .delete-projekt-btn { background-color: var(--rot-fehler-hell); color: var(--rot-fehler); border-color: #f5c6cb; }
+.header-actions .delete-projekt-btn:hover { background-color: #f1b0b7; }
+.projekt-beschreibung { margin-top: 5px; color: #555; margin-bottom: 20px; font-size: 1.05em;}
+hr.section-divider { border: none; border-top: 1px dashed #ccc; margin: 30px 0; }
+
+/* --- Dashboard --- */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+.project-container {
+    background-color: #fff; border-radius: var(--radius-standard); padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.06); border: 1px solid var(--grau-rand-hell);
+}
+.project-container h3 { margin: 0 0 15px 0; font-size: 1.15em; font-weight: 600; }
+.project-id { font-size: 0.8em; color: var(--grau-text-hell); font-weight: 400; margin-left: 5px; }
+.task-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; font-size: 0.85em; color: var(--grau-text-mittel); }
+.task-summary span { padding: 4px 9px; border-radius: var(--radius-klein); background-color: var(--grau-element-hintergrund); font-weight: 500; }
+.task-summary .urgency-red { color: var(--rot-fehler); background-color: var(--rot-fehler-hell); }
+.task-summary .urgency-yellow { color: var(--orange-warnung); background-color: var(--orange-warnung-hell); }
+.task-summary .urgency-green { color: var(--gruen-erfolg); background-color: var(--gruen-erfolg-hell); }
+.view-project-link { display: inline-block; margin-top: 10px; font-size: 0.95em; color: var(--blau-apple); text-decoration: none; font-weight: 500; }
+
+/* --- Task Liste (Projekt Detail, Alle Aufgaben etc.) --- */
+.task-list-full .task-item-detailed {
+    background-color: #fff; border: 1px solid var(--grau-rand-hell); border-radius: var(--radius-standard);
+    padding: 18px; margin-bottom: 18px; display: flex; justify-content: space-between;
+    align-items: flex-start; border-left: 4px solid transparent; /* Start ohne Farbe */
+    transition: box-shadow 0.15s ease;
+}
+.task-list-full .task-item-detailed:hover { box-shadow: 0 3px 8px rgba(0,0,0,0.08); }
+.task-item-detailed.urgency-rot { border-left-color: var(--rot-fehler); }
+.task-item-detailed.urgency-gelb { border-left-color: var(--orange-warnung); }
+.task-item-detailed.urgency-grün { border-left-color: var(--gruen-erfolg); }
+.task-item-detailed.task-completed { background-color: #f9f9f9; opacity: 0.8; border-left-color: var(--grau-text-hell); }
+.task-item-detailed.task-completed .task-title { text-decoration: line-through; color: var(--grau-text-hell); }
+.task-info { flex-grow: 1; margin-right: 20px; }
+.task-title { font-weight: 600; display: block; margin-bottom: 6px; font-size: 1.05em; color: var(--grau-text-dunkel);}
+.task-project-link { display: block; font-size: 0.85em; color: var(--grau-text-hell); margin-bottom: 8px; }
+.task-project-link a { color: var(--blau-apple); }
+.task-meta { font-size: 0.85em; color: var(--grau-text-mittel); margin-bottom: 10px; display: block; line-height: 1.4;}
+.task-description { font-size: 0.95em; color: var(--grau-text-mittel); margin-top: 8px; white-space: pre-wrap; margin-bottom: 15px; }
+.urgency-tag { padding: 3px 7px; border-radius: var(--radius-klein); font-size: 0.8em; display: inline-block; font-weight: 500; margin: 0 2px;}
+.urgency-tag.urgency-rot { color: var(--rot-fehler); background-color: var(--rot-fehler-hell); }
+.urgency-tag.urgency-gelb { color: var(--orange-warnung); background-color: var(--orange-warnung-hell); }
+.urgency-tag.urgency-grün { color: var(--gruen-erfolg); background-color: var(--gruen-erfolg-hell); }
+.task-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.task-actions .action-btn { background: none; border: none; font-size: 1.3em; /* Größere Icons */ cursor: pointer; padding: 6px; color: var(--grau-text-hell); transition: color 0.2s; }
+.task-actions .action-btn:hover { color: var(--blau-apple); }
+.task-actions .delete-btn:hover { color: var(--rot-fehler); }
+.task-actions .complete-btn:hover { color: var(--gruen-erfolg); }
+
+/* Anhänge & Protokoll in Task Detail */
+.task-attachments, .task-protocol { margin-top: 25px; padding-top: 20px; border-top: 1px dashed #dcdce0; }
+.task-attachments h5, .task-protocol h5 { margin: 0 0 12px 0; font-size: 1em; font-weight: 600; color: var(--grau-text-mittel); }
+.task-attachments ul, .protocol-list { list-style: none; padding-left: 0; margin-bottom: 18px; }
+.task-attachments li, .protocol-list li { margin-bottom: 10px; font-size: 0.95em; line-height: 1.5; }
+.task-attachments li a { color: var(--blau-apple); }
+.file-meta { color: var(--grau-text-hell); font-size: 0.9em; }
+.protocol-list p { margin: 3px 0 8px 0; white-space: pre-wrap; color: var(--grau-text-dunkel); }
+.protocol-timestamp { color: var(--grau-text-hell); font-size: 0.9em; margin-right: 8px; }
+.no-items { font-style: italic; color: var(--grau-text-hell); font-size: 0.95em; margin-bottom: 12px; }
+.inline-form { display: flex; align-items: flex-start; /* Oben ausrichten */ gap: 10px; margin-top: 10px; }
+.inline-form .file-input { border: 1px solid var(--grau-rand); border-radius: var(--radius-klein); padding: 6px 10px; font-size: 0.9em; flex-grow: 1; }
+.inline-form .protocol-input { border: 1px solid var(--grau-rand); border-radius: var(--radius-klein); padding: 8px 12px; font-size: 0.95em; flex-grow: 1; resize: vertical; min-height: 40px; }
+.inline-form .btn-small { padding: 8px 15px; font-size: 0.9em; background-color: #6c757d; color: white; border: none; border-radius: var(--radius-klein); cursor: pointer; transition: background-color 0.2s; white-space: nowrap; align-self: flex-end; /* Button unten ausrichten bei mehrzeiliger Textarea */ }
+.inline-form .btn-small:hover { background-color: #5a6268; }
+
+/* --- Kanban Board --- */
+.kanban-board-swimlanes { width: 100%; }
+.kanban-swimlane { margin-bottom: 30px; border: 1px solid var(--grau-rand-hell); border-radius: var(--radius-standard); background-color: #fdfdfd; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.swimlane-title { font-size: 1.1em; font-weight: 600; padding: 12px 18px; background-color: var(--grau-element-hintergrund); border-top-left-radius: var(--radius-standard); border-top-right-radius: var(--radius-standard); border-bottom: 1px solid var(--grau-rand-hell); margin: 0; color: var(--grau-text-dunkel); }
+.swimlane-title.current-week { background-color: #e6f7ff; border-bottom-color: #b3e0ff; }
+.kanban-week-columns { display: flex; gap: 18px; overflow-x: auto; padding: 18px; }
+.kanban-column { flex: 0 0 auto; width: 300px; background-color: #f8f9fa; border-radius: var(--radius-standard); display: flex; flex-direction: column; height: fit-content; max-height: 70vh; border: 1px solid var(--grau-rand-hell); }
+.kanban-column h4.kanban-column-title { font-size: 0.95em; font-weight: 600; padding: 12px 15px; border-bottom: 1px solid var(--grau-rand-hell); display: flex; justify-content: space-between; align-items: center; color: var(--grau-text-mittel); background-color: #f0f0f5; border-top-left-radius: var(--radius-standard); border-top-right-radius: var(--radius-standard);}
+.kanban-column h4.kanban-column-title .task-count { font-size: 0.9em; font-weight: 500; color: var(--grau-text-hell); background-color: #e8e8ed; padding: 3px 7px; border-radius: var(--radius-klein); }
+.kanban-cards { padding: 12px; overflow-y: auto; flex-grow: 1; min-height: 100px; }
+.kanban-card { background-color: #ffffff; border-radius: var(--radius-klein); padding: 12px 15px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--grau-rand-hell); position: relative; cursor: grab; border-left: 4px solid var(--grau-rand); transition: box-shadow 0.2s ease;}
+.kanban-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.kanban-card.urgency-rot { border-left-color: var(--rot-fehler); }
+.kanban-card.urgency-gelb { border-left-color: var(--orange-warnung); }
+.kanban-card.urgency-grün { border-left-color: var(--gruen-erfolg); }
+.card-title { font-weight: 500; font-size: 1em; display: block; margin-bottom: 8px; color: var(--grau-text-dunkel); }
+.card-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; font-size: 0.8em; color: var(--grau-text-mittel); }
+.card-meta .urgency-tag { padding: 2px 6px; font-size: 0.9em; }
+.card-meta .due-date { background-color: #f0f0f0; padding: 2px 7px; border-radius: var(--radius-klein); display: inline-flex; align-items: center;}
+.card-meta .due-date.overdue { background-color: var(--rot-fehler-hell); color: var(--rot-fehler); font-weight: 500; }
+.edit-card-link { position: absolute; top: 8px; right: 8px; font-size: 1em; color: #bbb; text-decoration: none; padding: 4px; border-radius: 50%; line-height: 1; opacity: 0; transition: opacity 0.2s ease, background-color 0.2s ease; }
+.kanban-card:hover .edit-card-link { opacity: 1; }
+.edit-card-link:hover { background-color: #eee; color: #555; }
+
+/* Drag & Drop Styles */
+.sortable-ghost { opacity: 0.4; background-color: #d6eaff; border: 1px dashed var(--blau-apple); border-radius: var(--radius-klein); }
+.sortable-chosen { box-shadow: 0 6px 12px rgba(0,0,0,0.15); transform: scale(1.02); }
+body.sortable-grabbing * { cursor: grabbing !important; }
+
+/* --- Formulare --- */
+.task-form .form-group { margin-bottom: 22px; }
+.task-form label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--grau-text-mittel); font-size: 0.95em; }
+.task-form input[type="text"], .task-form input[type="date"], .task-form textarea, .task-form select {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--grau-rand);
+    border-radius: var(--radius-klein); font-size: 1em; background-color: #fff;
+    font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.task-form input:focus, .task-form textarea:focus, .task-form select:focus {
+    outline: none; border-color: var(--blau-apple); box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+.task-form textarea { resize: vertical; min-height: 90px; }
+.task-form .form-actions { margin-top: 35px; display: flex; align-items: center; gap: 15px; }
+.task-form .submit-btn {
+    padding: 12px 28px; background-color: var(--blau-apple); color: white; border: none;
+    border-radius: var(--radius-standard); font-size: 1em; font-weight: 500; cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.task-form .submit-btn:hover { background-color: var(--blau-apple-dunkel); }
+.task-form .cancel-link { color: var(--blau-apple); text-decoration: none; font-size: 0.95em; }
+.task-form .cancel-link:hover { text-decoration: underline; }
+
+/* Flash Nachrichten */
+.flash-messages { margin-bottom: 20px; }
+.alert { padding: 12px 18px; border-radius: var(--radius-klein); border: 1px solid transparent; font-size: 0.95em; }
+.alert-success { background-color: #d1e7dd; border-color: #badbcc; color: #0f5132; }
+.alert-error { background-color: #f8d7da; border-color: #f5c2c7; color: #842029; }
+.alert-warning { background-color: #fff3cd; border-color: #ffecb5; color: #664d03; }
+.alert-info { background-color: #cff4fc; border-color: #b6effb; color: #055160; }
+

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HorizonBoard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h1><a href="{{ url_for('dashboard') }}" style="text-decoration: none; color: inherit;">HorizonBoard</a></h1>
+            <nav>
+                <ul>
+                    <li class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="{{ 'active' if request.endpoint == 'aufgaben_heute' else '' }}"><a href="{{ url_for('aufgaben_heute') }}">Heute</a></li>
+                    <li class="{{ 'active' if request.endpoint == 'alle_aufgaben' else '' }}"><a href="{{ url_for('alle_aufgaben') }}">Alle Aufgaben</a></li>
+                    {# NEUER LINK ZU KONTAKTEN #}
+                    <li class="{{ 'active' if request.endpoint.startswith('kontakt') else '' }}"><a href="{{ url_for('kontakte_liste') }}">Kontakte</a></li>
+                </ul>
+                 <hr style="border: none; border-top: 1px solid #dcdce0; margin: 20px 0;">
+                 <h4>Projekte</h4>
+                 <ul>
+                     {% for proj in g.alle_projekte %}
+                     <li class="{{ 'active' if request.endpoint in ['projekt_detail', 'kanban_board'] and g.projekt_id == proj.id else '' }} {% if proj.erledigt_am %}projekt-erledigt{% endif %}">
+                         <a href="{{ url_for('projekt_detail', projekt_id=proj.id) }}">{{ proj.name }}</a>
+                         {% if request.endpoint in ['projekt_detail', 'kanban_board'] and g.projekt_id == proj.id %}
+                         <ul style="margin-left: 15px; list-style: none; padding-left: 0; margin-top: 5px;">
+                             <li class="{{ 'active-sub' if request.endpoint == 'kanban_board' else '' }}" style="font-size: 0.9em;">
+                                 <a href="{{ url_for('kanban_board', projekt_id=proj.id) }}">↳ Board</a>
+                             </li>
+                             <style>.active-sub a { font-weight: 600; color: #007aff; background: none; }</style>
+                         </ul>
+                         {% endif %}
+                     </li>
+                     {% endfor %}
+                     <li class="{{ 'active' if request.endpoint == 'neues_projekt_form' else '' }}">
+                         <a href="{{ url_for('neues_projekt_form') }}">+ Neues Projekt...</a>
+                     </li>
+                 </ul>
+            </nav>
+            <div class="sidebar-footer">
+                 <a href="{{ url_for('neue_aufgabe_projekt_waehlen') }}" class="quick-add-btn">+ Neue Aufgabe</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+             {% with messages = get_flashed_messages(with_categories=true) %}
+                 {% if messages %}
+                 <div class="flash-messages">
+                     {% for category, message in messages %}
+                     <div class="alert alert-{{ category or 'info' }}">{{ message }}</div>
+                     {% endfor %}
+                 </div>
+                 <style>
+                     .flash-messages { margin-bottom: 15px; }
+                     .alert { padding: 10px 15px; border-radius: 6px; border: 1px solid transparent; }
+                     .alert-success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+                     .alert-error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+                     .alert-warning { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
+                     .alert-info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+                 </style>
+                 {% endif %}
+             {% endwith %}
+            {% block content %}<!-- Inhalt -->{% endblock %}
+        </main>
+    </div>
+     <script>
+        function confirmDelete(event) {
+            // Spezifische Bestätigung für Aufgaben-Löschung
+            if (!confirm('Möchten Sie diese Aufgabe wirklich löschen?')) {
+                event.preventDefault();
+            }
+        }
+        // Die Bestätigung für das Projekt-Löschen ist jetzt im onsubmit-Attribut des Formulars
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="{{ url_for('static', filename='kanban.js') }}"></script>
+    
+</body>
+</html>

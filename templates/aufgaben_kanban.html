@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Kanban – {{ projekt.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">🗂️ Kanban-Ansicht
+    {% if aktiver_sprint %}<span style="font-size:13px;font-weight:400;color:var(--text-secondary);margin-left:8px;">{{ aktiver_sprint.name }}</span>{% endif %}
+  </span>
+  <div style="display:flex;gap:8px;">
+    <a href="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}" class="btn btn-secondary btn-sm">← Listenansicht</a>
+  </div>
+</div>
+
+<div class="page-body">
+  {% if not aktiver_sprint %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🏃</div>
+    <h3>Kein aktiver Sprint</h3>
+    <p>Aktiviere einen Sprint in der <a href="{{ url_for('sprints_liste', projekt_id=projekt.id) }}" style="color:var(--sidebar-accent);">Sprint-Verwaltung</a>.</p>
+  </div>
+  {% else %}
+  <div class="kanban-board">
+    {% for status in AUFGABEN_STATUS %}
+    {% set k_klasse = STATUS_KLASSEN.get(status, 'status-default') %}
+    <div class="kanban-col" data-status="{{ status }}">
+      <div class="kanban-col-header {{ k_klasse }}">
+        <span>{{ status }}</span>
+        <span class="kanban-count">{{ nach_status[status]|length }}</span>
+      </div>
+      <div class="kanban-col-body">
+        {% for a in nach_status[status] %}
+        <div class="kanban-card" data-aufgabe-id="{{ a.id }}"
+             onclick="location.href='{{ url_for('aufgabe_detail', aufgaben_id=a.id) }}'">
+          <div class="kanban-card-id">{{ a.aufgaben_nr or ('ID ' + a.id|string) }}</div>
+          <div class="kanban-card-title">{{ a.titel }}</div>
+          <div class="kanban-card-meta">
+            {% if a.prioritaet %}
+            <span class="badge {{ a.prio_klasse }}" style="font-size:10px;padding:2px 6px;">{{ a.prioritaet }}</span>
+            {% endif %}
+            {% if a.story_points_geschaetzt %}
+            <span style="font-size:11px;color:var(--text-light);">{{ a.story_points_geschaetzt }} SP</span>
+            {% endif %}
+            {% if a.epic %}
+            <span class="tag" style="font-size:10px;">{{ a.epic.name }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

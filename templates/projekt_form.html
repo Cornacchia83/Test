@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Projekt bearbeiten' if projekt else 'Neues Projekt' }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">{{ '✏️ Projekt bearbeiten' if projekt else '＋ Neues Projekt' }}</span>
+</div>
+<div class="page-body">
+  <div class="form-card">
+    <h3>{{ 'Projekt bearbeiten' if projekt else 'Neues Projekt erstellen' }}</h3>
+    <form method="post">
+      <div class="form-group">
+        <label>Projektname *</label>
+        <input type="text" name="name" required value="{{ projekt.name if projekt else '' }}" placeholder="z.B. Mein Team">
+      </div>
+      <div class="form-group">
+        <label>Kürzel (für IDs, z.B. THIT)</label>
+        <input type="text" name="kuerzel" maxlength="8" value="{{ projekt.kuerzel if projekt else '' }}" placeholder="z.B. THIT" style="text-transform:uppercase;">
+      </div>
+      <div class="form-group">
+        <label>Beschreibung</label>
+        <textarea name="beschreibung" rows="3" placeholder="Kurze Beschreibung des Projekts...">{{ projekt.beschreibung if projekt else '' }}</textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ 'Speichern' if projekt else 'Projekts erstellen' }}</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Abbrechen</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

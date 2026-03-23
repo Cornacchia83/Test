@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Kontaktübersicht - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>Kontaktübersicht</h2>
+    <div class="header-actions">
+         <a href="{{ url_for('neuer_kontakt_form') }}" class="quick-add-btn">
+             + Neuer Kontakt
+         </a>
+    </div>
+</header>
+
+<section class="contact-list-section">
+    {% if kontakte %}
+    <table class="contact-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>E-Mail</th>
+                <th>Telefon</th>
+                <th>Firma</th>
+                <th>Notizen</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kontakt in kontakte %}
+            <tr>
+                <td><strong>{{ kontakt.name }}</strong></td>
+                <td>{{ kontakt.email if kontakt.email else '-' }}</td>
+                <td>{{ kontakt.telefon if kontakt.telefon else '-' }}</td>
+                <td>{{ kontakt.firma if kontakt.firma else '-' }}</td>
+                <td>{{ kontakt.notizen|truncate(50, True) if kontakt.notizen else '-' }}</td> {# Kürze Notizen #}
+                <td class="contact-actions">
+                    <a href="{{ url_for('bearbeite_kontakt_form', kontakt_id=kontakt.id) }}" class="action-btn edit-btn" title="Bearbeiten">✎</a>
+                    <form action="{{ url_for('kontakt_loeschen', kontakt_id=kontakt.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Sind Sie sicher, dass Sie den Kontakt \'{{ kontakt.name }}\' löschen möchten? Verknüpfungen zu Projekten/Aufgaben könnten Probleme verursachen.');">
+                         <button type="submit" class="action-btn delete-btn" title="Löschen">🗑</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>Noch keine Kontakte vorhanden.</p>
+    {% endif %}
+</section>
+
+{# CSS für die Kontakttabelle #}
+<style>
+    .contact-list-section { margin-top: 20px; }
+    .contact-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+        border-radius: var(--radius-standard);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+        overflow: hidden; /* Für abgerundete Ecken */
+    }
+    .contact-table th, .contact-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--grau-rand-hell);
+    }
+    .contact-table th {
+        background-color: var(--grau-element-hintergrund);
+        font-weight: 600;
+        font-size: 0.9em;
+        color: var(--grau-text-mittel);
+    }
+    .contact-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .contact-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .contact-table td {
+        font-size: 0.95em;
+        color: var(--grau-text-dunkel);
+    }
+    .contact-actions { white-space: nowrap; text-align: right !important; }
+    .contact-actions .action-btn { font-size: 1.1em; padding: 4px; }
+</style>
+{% endblock %}

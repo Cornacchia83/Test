@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{% if aufgabe %}Aufgabe bearbeiten{% else %}Neue Aufgabe erstellen{% endif %} - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>{% if aufgabe %}Aufgabe bearbeiten{% else %}Neue Aufgabe erstellen{% endif %}</h2>
+</header>
+
+<section>
+    <form method="post" action="{% if aufgabe %}{{ url_for('aufgabe_aktualisieren', aufgaben_id=aufgabe.id) }}{% else %}{{ url_for('aufgabe_erstellen') }}{% endif %}" class="task-form">
+        {% if not aufgabe %} <input type="hidden" name="projekt_id" value="{{ projekt_id }}"> {% endif %}
+        <div class="form-group">
+            <label for="titel">Titel:</label>
+            <input type="text" id="titel" name="titel" required value="{{ aufgabe.titel if aufgabe else '' }}">
+        </div>
+        <div class="form-group">
+            <label for="beschreibung">Beschreibung:</label>
+            <textarea id="beschreibung" name="beschreibung" rows="4">{{ aufgabe.beschreibung if aufgabe else '' }}</textarea>
+        </div>
+        {% if aufgabe and projekt_spalten %}
+        <div class="form-group">
+            <label for="spalte_id">Kanban-Spalte:</label>
+            <select id="spalte_id" name="spalte_id">
+                {% for spalte in projekt_spalten %}<option value="{{ spalte.id }}" {% if aufgabe.spalte_id == spalte.id %}selected{% endif %}>{{ spalte.name }}</option>{% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        {# --- NEU: Dropdown für "Wartet auf Kontakt" --- #}
+        <div class="form-group">
+            <label for="wartet_auf_kontakt_id">Wartet auf Kontakt (Optional):</label>
+            <select id="wartet_auf_kontakt_id" name="wartet_auf_kontakt_id">
+                <option value="0">-- Keiner / Nicht relevant --</option> {# Wert 0 für "keiner" #}
+                {% if alle_kontakte %}
+                    {% for kontakt in alle_kontakte %}
+                        <option value="{{ kontakt.id }}" {% if aufgabe and aufgabe.wartet_auf_kontakt_id == kontakt.id %}selected{% endif %}>
+                            {{ kontakt.name }} {% if kontakt.firma %}({{ kontakt.firma }}){% endif %}
+                        </option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+        </div>
+        {# --- Ende "Wartet auf" --- #}
+
+        <div class="form-group">
+            <label for="dringlichkeit">Dringlichkeit:</label>
+            <select id="dringlichkeit" name="dringlichkeit">
+                {% for d in dringlichkeiten %}<option value="{{ d.name }}" {% if aufgabe and aufgabe.dringlichkeit == d %}selected{% endif %}>{{ d.value }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="faelligkeitsdatum">Fälligkeitsdatum:</label>
+            <input type="date" id="faelligkeitsdatum" name="faelligkeitsdatum" value="{{ aufgabe.faelligkeitsdatum.strftime('%Y-%m-%d') if aufgabe and aufgabe.faelligkeitsdatum else '' }}">
+        </div>
+         <div class="form-group">
+            <label for="lebenszyklus_phase">Lebenszyklus-Phase:</label>
+            <select id="lebenszyklus_phase" name="lebenszyklus_phase">
+                 <option value="">-- Keine Phase --</option>
+                {% for p in phasen %}<option value="{{ p.name }}" {% if aufgabe and aufgabe.lebenszyklus_phase == p %}selected{% endif %}>{{ p.value }}</option>{% endfor %}
+            </select>
+        </div>
+         <div class="form-group">
+            <label for="verknuepftes_element">Verknüpftes Element:</label>
+            <input type="text" id="verknuepftes_element" name="verknuepftes_element" value="{{ aufgabe.verknuepftes_element if aufgabe else '' }}">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">{% if aufgabe %}Änderungen speichern{% else %}Aufgabe erstellen{% endif %}</button>
+            <a href="{{ url_for('projekt_detail', projekt_id=aufgabe.projekt_id if aufgabe else projekt_id) }}" class="cancel-link">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{# Styles wie vorher #}
+<style>
+    .task-form .form-group { margin-bottom: 20px; }
+    .task-form label { display: block; margin-bottom: 8px; font-weight: 500; color: #3c3c43; }
+    .task-form input[type="text"], .task-form input[type="date"], .task-form textarea, .task-form select { width: 100%; padding: 10px 12px; border: 1px solid #dcdce0; border-radius: 6px; font-size: 1em; background-color: #fff; font-family: inherit; }
+    .task-form textarea { resize: vertical; min-height: 80px; }
+    .task-form .form-actions { margin-top: 30px; display: flex; align-items: center; gap: 15px; }
+    .task-form .submit-btn { padding: 12px 25px; background-color: #007aff; color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease; }
+    .task-form .submit-btn:hover { background-color: #005ecb; }
+    .task-form .cancel-link { color: #007aff; text-decoration: none; }
+    .task-form .cancel-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}

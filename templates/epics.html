@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Epics – {{ projekt.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">🔺 Epics</span>
+  <button class="btn btn-primary btn-sm" data-open-modal="modal-neues-epic">＋ Neues Epic</button>
+</div>
+<div class="page-body">
+  {% if epics %}
+  <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width:32px;"></th>
+          <th>Epic</th>
+          <th>Phase</th>
+          <th>Priorität</th>
+          <th>Zeitlinie</th>
+          <th>Verbundene Aufgaben</th>
+          <th>Epic-ID</th>
+          <th style="width:60px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in epics %}
+        {# Epic row #}
+        <tr class="epic-row" style="background:var(--border-light);">
+          <td>
+            <button class="epic-toggle-btn" data-epic-id="{{ e.id }}">▶</button>
+          </td>
+          <td style="font-weight:600;">{{ e.name }}</td>
+          <td>
+            <span class="badge {% if e.phase == 'Dev in Arbeit' %}status-in-bearbeitung{% elif e.phase == 'Produkt Discovery' %}status-ueberpruefung{% elif e.phase == 'Erledigt' %}status-erledigt{% else %}status-default{% endif %}"
+                  data-inline-field="phase" data-entity-type="epic" data-entity-id="{{ e.id }}"
+                  data-options='[{% for ph in EPIC_PHASEN %}{"label":"{{ ph }}","value":"{{ ph }}","klasse":"status-default"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+              {{ e.phase }}
+            </span>
+          </td>
+          <td>
+            <span class="badge {{ PRIO_KLASSEN.get(e.prioritaet, 'prio-default') }}"
+                  data-inline-field="prioritaet" data-entity-type="epic" data-entity-id="{{ e.id }}"
+                  data-options='[{% for p in PRIORITAETEN %}{"label":"{{ p }}","value":"{{ p }}","klasse":"{{ PRIO_KLASSEN[p] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+              {{ e.prioritaet }}
+            </span>
+          </td>
+          <td style="font-size:12px;">
+            {% if e.startdatum and e.enddatum %}
+            <span style="background:var(--sidebar-accent);color:white;padding:2px 8px;border-radius:3px;font-size:11px;">
+              {{ e.startdatum.strftime('%d.%m') }} – {{ e.enddatum.strftime('%d.%m.%Y') }}
+            </span>
+            {% else %}–{% endif %}
+          </td>
+          <td>
+            {% set cnt = e.aufgaben.count() %}
+            <span class="tag">{{ cnt }} Aufgabe{{ 'n' if cnt != 1 else '' }}</span>
+          </td>
+          <td><span class="nr-tag">{{ e.epic_nr or '–' }}</span></td>
+          <td>
+            <div class="row-actions">
+              <form method="post" action="{{ url_for('epic_loeschen', projekt_id=projekt.id, epic_id=e.id) }}"
+                    data-confirm="Epic '{{ e.name }}' löschen?" style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Löschen">🗑️</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {# Child task rows (hidden by default) #}
+        {% set aufgaben = e.aufgaben.all() %}
+        {% if aufgaben %}
+        <tr class="epic-child-row hidden" data-parent="{{ e.id }}" style="background:rgba(87,155,252,.05);">
+          <td style="padding-left:40px;" colspan="8">
+            <table style="width:100%;font-size:12px;">
+              <tr style="color:var(--text-light);font-size:11px;font-weight:500;">
+                <th style="padding:4px 8px;text-align:left;">Aufgabe</th>
+                <th style="padding:4px 8px;text-align:left;">Status</th>
+                <th style="padding:4px 8px;text-align:left;">Priorität</th>
+                <th style="padding:4px 8px;text-align:left;">Sprint</th>
+              </tr>
+              {% for a in aufgaben %}
+              <tr>
+                <td style="padding:4px 8px;">
+                  <a href="{{ url_for('aufgabe_detail', aufgaben_id=a.id) }}" class="task-title-link">{{ a.titel }}</a>
+                </td>
+                <td style="padding:4px 8px;">
+                  <span class="badge {{ a.status_klasse }}" style="font-size:10px;padding:2px 6px;">{{ a.status }}</span>
+                </td>
+                <td style="padding:4px 8px;">
+                  <span class="badge {{ a.prio_klasse }}" style="font-size:10px;padding:2px 6px;">{{ a.prioritaet }}</span>
+                </td>
+                <td style="padding:4px 8px;color:var(--text-secondary);">
+                  {{ a.sprint.name if a.sprint else 'Backlog' }}
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔺</div>
+    <h3>Noch keine Epics</h3>
+    <p>Gruppiere deine Aufgaben in Epics für bessere Übersicht.</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- MODAL: Neues Epic -->
+<div id="modal-neues-epic" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🔺 Neues Epic</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <form method="post" action="{{ url_for('epic_erstellen', projekt_id=projekt.id) }}">
+      <div class="form-group">
+        <label>Epic-Name *</label>
+        <input type="text" name="name" required placeholder="z.B. Infrastruktur">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phase</label>
+          <select name="phase">
+            {% for ph in EPIC_PHASEN %}<option value="{{ ph }}">{{ ph }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priorität</label>
+          <select name="prioritaet">
+            {% for p in PRIORITAETEN %}<option value="{{ p }}" {% if p=='Mittel' %}selected{% endif %}>{{ p }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Startdatum</label>
+          <input type="date" name="startdatum">
+        </div>
+        <div class="form-group">
+          <label>Enddatum</label>
+          <input type="date" name="enddatum">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Beschreibung</label>
+        <textarea name="beschreibung" rows="2" placeholder="Optionale Beschreibung..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Erstellen</button>
+        <button type="button" class="btn btn-secondary modal-close">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

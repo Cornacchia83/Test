@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – HorizonBoard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">HorizonBoard</span>
+  <a href="{{ url_for('neues_projekt') }}" class="btn btn-primary btn-sm">＋ Neues Projekt</a>
+</div>
+<div class="page-body">
+  {% if g.alle_projekte %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+    {% for p in g.alle_projekte %}
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow='none'">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,#579bfc,#a25ddc);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;">{{ p.kuerzel[:2] if p.kuerzel else p.name[:2] }}</div>
+        <div>
+          <div style="font-weight:600;font-size:15px;">{{ p.name }}</div>
+          <div style="font-size:11px;color:var(--text-light);">{{ p.kuerzel or '' }}</div>
+        </div>
+      </div>
+      {% if p.beschreibung %}<p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">{{ p.beschreibung[:80] }}{% if p.beschreibung|length > 80 %}…{% endif %}</p>{% endif %}
+      <div style="display:flex;gap:8px;font-size:11px;color:var(--text-light);margin-bottom:16px;">
+        <span>{{ p.aufgaben.count() }} Aufgaben</span>
+        <span>·</span>
+        <span>{{ p.sprints.count() }} Sprints</span>
+        <span>·</span>
+        <span>{{ p.bugs.count() }} Bugs</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a href="{{ url_for('aufgaben_board', projekt_id=p.id) }}" class="btn btn-primary btn-sm">Öffnen →</a>
+        <form method="post" action="{{ url_for('projekt_loeschen', projekt_id=p.id) }}"
+              data-confirm="Projekt '{{ p.name }}' und ALLE zugehörigen Daten (Aufgaben, Sprints, Epics, Bugs) unwiderruflich löschen?" style="display:inline;">
+          <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+        </form>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🚀</div>
+    <h3>Willkommen bei HorizonBoard!</h3>
+    <p>Erstelle dein erstes Projekt, um loszulegen.</p>
+    <a href="{{ url_for('neues_projekt') }}" class="btn btn-primary" style="margin-top:16px;">＋ Projekt erstellen</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

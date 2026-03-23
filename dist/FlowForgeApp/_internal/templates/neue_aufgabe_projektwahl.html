@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Neue Aufgabe - Projekt wählen{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>Neue Aufgabe erstellen - Projekt auswählen</h2>
+</header>
+
+<section>
+    <form method="post" action="{{ url_for('neue_aufgabe_projekt_waehlen') }}" class="task-form">
+        <div class="form-group">
+            <label for="projekt_id">Für welches Projekt möchten Sie eine Aufgabe erstellen?</label>
+            <select id="projekt_id" name="projekt_id" required>
+                <option value="" disabled selected>-- Bitte Projekt auswählen --</option>
+                {% for projekt in projekte %}
+                <option value="{{ projekt.id }}">{{ projekt.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Weiter zur Aufgabenerstellung</button>
+            <a href="{{ request.referrer or url_for('dashboard') }}" class="cancel-link">Abbrechen</a>
+        </div>
+    </form>
+</section>
+
+{# Styles für das Formular #}
+<style>
+    .task-form .form-group { margin-bottom: 20px; }
+    .task-form label { display: block; margin-bottom: 8px; font-weight: 500; color: #3c3c43; }
+    .task-form select { width: 100%; padding: 10px 12px; border: 1px solid #dcdce0; border-radius: 6px; font-size: 1em; background-color: #fff; font-family: inherit; }
+    .task-form .form-actions { margin-top: 30px; display: flex; align-items: center; gap: 15px; }
+    .task-form .submit-btn { padding: 12px 25px; background-color: #007aff; color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease; }
+    .task-form .submit-btn:hover { background-color: #005ecb; }
+    .task-form .cancel-link { color: #007aff; text-decoration: none; }
+    .task-form .cancel-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}

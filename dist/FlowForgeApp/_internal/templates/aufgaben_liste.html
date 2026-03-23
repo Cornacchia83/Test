@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ ansicht_titel }} - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>{{ ansicht_titel }}</h2>
+    <div class="header-actions"></div>
+</header>
+
+<section>
+    {% if aufgaben_mit_projekt %}
+        <div class="task-list-full">
+            {% for item in aufgaben_mit_projekt %}
+            {% set aufgabe = item.aufgabe %}
+            {% set projekt_name = item.projekt_name %}
+            <div class="task-item-detailed {% if aufgabe.erledigt_am %}task-completed{% endif %} urgency-{{ aufgabe.dringlichkeit.value.lower() }}">
+                <div class="task-info">
+                    <span class="task-title">{{ aufgabe.titel }}</span>
+                    <span class="task-project-link">Projekt: <a href="{{ url_for('projekt_detail', projekt_id=aufgabe.projekt_id) }}">{{ projekt_name }}</a></span>
+                    <span class="task-meta">
+                        Dringlichkeit: <span class="urgency-tag urgency-{{ aufgabe.dringlichkeit.value.lower() }}">{{ aufgabe.dringlichkeit.value }}</span>
+                        {% if aufgabe.faelligkeitsdatum %}| Fällig: {{ aufgabe.faelligkeitsdatum.strftime('%d.%m.%Y') }}{% endif %}
+                         {# NEU: "Wartet auf" anzeigen #}
+                        {% if aufgabe.wartet_auf_kontakt %}
+                            | <strong style="color: #dc3545;">Wartet auf: {{ aufgabe.wartet_auf_kontakt.name }}</strong>
+                        {% endif %}
+                        {% if aufgabe.lebenszyklus_phase %}| Phase: {{ aufgabe.lebenszyklus_phase.value }}{% endif %}
+                         {% if aufgabe.erledigt_am %}| Erledigt: {{ aufgabe.erledigt_am.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+                    </span>
+                     {% if aufgabe.beschreibung %} <p class="task-description">{{ aufgabe.beschreibung }}</p> {% endif %}
+                     {# Optional: Hier könnten auch Anhänge/Protokoll angezeigt werden, wenn gewünscht #}
+                </div>
+                <div class="task-actions">{# Actions wie vorher #}</div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %} <p>Keine Aufgaben in dieser Ansicht gefunden.</p> {% endif %}
+</section>
+
+{# Styles wie vorher #}
+<style>
+    .task-project-link { display: block; font-size: 0.85em; color: #8a8a8e; margin-bottom: 8px; }
+    .task-project-link a { color: #007aff; text-decoration: none; }
+    .task-project-link a:hover { text-decoration: underline; }
+    .task-info .task-meta { margin-bottom: 8px; }
+    .task-list-full .task-item-detailed { background-color: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; border-left-width: 4px; }
+    .task-item-detailed.urgency-rot { border-left-color: #ff3b30; }
+    .task-item-detailed.urgency-gelb { border-left-color: #ff9500; }
+    .task-item-detailed.urgency-grün { border-left-color: #34c759; }
+    .task-item-detailed.task-completed { background-color: #f7f7f7; opacity: 0.7; border-left-color: #8a8a8e; }
+    .task-item-detailed.task-completed .task-title { text-decoration: line-through; color: #636366; }
+    .task-info { flex-grow: 1; margin-right: 20px;}
+    .task-title { font-weight: 600; display: block; margin-bottom: 5px; }
+    .task-meta { font-size: 0.85em; color: #636366; margin-bottom: 8px; display: block;}
+    .task-description { font-size: 0.9em; color: #3c3c43; margin-top: 5px; white-space: pre-wrap; }
+    .urgency-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.8em; display: inline-block; }
+    .urgency-tag.urgency-rot { color: #ff3b30; background-color: #ffebee; }
+    .urgency-tag.urgency-gelb { color: #ff9500; background-color: #fff8e1; }
+    .urgency-tag.urgency-grün { color: #34c759; background-color: #e8f5e9; }
+    .task-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0;}
+</style>
+{% endblock %}

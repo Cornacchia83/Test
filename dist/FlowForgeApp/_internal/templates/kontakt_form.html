@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{% if kontakt %}Kontakt bearbeiten{% else %}Neuen Kontakt erstellen{% endif %} - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>{% if kontakt %}Kontakt bearbeiten{% else %}Neuen Kontakt erstellen{% endif %}</h2>
+</header>
+
+<section>
+    <form method="post" action="{% if kontakt %}{{ url_for('kontakt_aktualisieren', kontakt_id=kontakt.id) }}{% else %}{{ url_for('kontakt_erstellen') }}{% endif %}" class="task-form"> {# Nutzt gleiches Formular-Styling #}
+
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required value="{{ kontakt.name if kontakt else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="email">E-Mail:</label>
+            <input type="email" id="email" name="email" value="{{ kontakt.email if kontakt else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="telefon">Telefon:</label>
+            <input type="tel" id="telefon" name="telefon" value="{{ kontakt.telefon if kontakt else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="firma">Firma:</label>
+            <input type="text" id="firma" name="firma" value="{{ kontakt.firma if kontakt else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="notizen">Notizen:</label>
+            <textarea id="notizen" name="notizen" rows="4">{{ kontakt.notizen if kontakt else '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">{% if kontakt %}Änderungen speichern{% else %}Kontakt erstellen{% endif %}</button>
+            <a href="{{ url_for('kontakte_liste') }}" class="cancel-link">Abbrechen</a> {# Zurück zur Liste #}
+        </div>
+    </form>
+</section>
+
+{# Styles für das Formular (könnten auch global sein) #}
+<style>
+    .task-form .form-group { margin-bottom: 20px; }
+    .task-form label { display: block; margin-bottom: 8px; font-weight: 500; color: #3c3c43; }
+    .task-form input[type="text"], .task-form input[type="email"], .task-form input[type="tel"], .task-form textarea, .task-form select { width: 100%; padding: 10px 12px; border: 1px solid #dcdce0; border-radius: 6px; font-size: 1em; background-color: #fff; font-family: inherit; }
+    .task-form textarea { resize: vertical; min-height: 80px; }
+    .task-form .form-actions { margin-top: 30px; display: flex; align-items: center; gap: 15px; }
+    .task-form .submit-btn { padding: 12px 25px; background-color: #007aff; color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s ease; }
+    .task-form .submit-btn:hover { background-color: #005ecb; }
+    .task-form .cancel-link { color: #007aff; text-decoration: none; }
+    .task-form .cancel-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}

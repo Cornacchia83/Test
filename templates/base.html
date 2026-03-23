@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HorizonBoard{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo" onclick="location.href='/'" style="cursor:pointer;">
+      <div class="sidebar-logo-icon">HB</div>
+      <span class="sidebar-logo-text">HorizonBoard</span>
+    </div>
+
+    {% if g.alle_projekte %}
+    <div class="project-switcher">
+      <select onchange="location.href='/projekt/'+this.value+'/aufgaben'">
+        {% for p in g.alle_projekte %}
+        <option value="{{ p.id }}" {% if g.projekt_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+      {% if g.projekt_id %}
+      <div style="display:flex;justify-content:space-between;padding:4px 8px 0;font-size:11px;">
+        <a href="{{ url_for('dashboard') }}" style="color:rgba(255,255,255,.4);text-decoration:none;">← Dashboard</a>
+        <form method="post" action="{{ url_for('projekt_loeschen', projekt_id=g.projekt_id) }}"
+              data-confirm="Projekt und ALLE Daten unwiderruflich löschen?" style="display:inline;">
+          <button type="submit" style="background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:11px;padding:0;" title="Projekt löschen">🗑️ Löschen</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% set pid = g.projekt_id %}
+    <div class="sidebar-section">
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'aufgaben_board' else '' }}"
+           onclick="location.href='{{ url_for('aufgaben_board', projekt_id=pid) if pid else '#' }}'">
+        <span class="sidebar-item-icon">📋</span> Aufgaben
+      </div>
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'aufgaben_kanban' else '' }}"
+           onclick="location.href='{{ url_for('aufgaben_kanban', projekt_id=pid) if pid else '#' }}'">
+        <span class="sidebar-item-icon">🗂️</span> Kanban-Ansicht
+      </div>
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'sprints_liste' else '' }}"
+           onclick="location.href='{{ url_for('sprints_liste', projekt_id=pid) if pid else '#' }}'">
+        <span class="sidebar-item-icon">🏃</span> Sprints
+      </div>
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'epics_liste' else '' }}"
+           onclick="location.href='{{ url_for('epics_liste', projekt_id=pid) if pid else '#' }}'">
+        <span class="sidebar-item-icon">🔺</span> Epics
+      </div>
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'bugs_liste' else '' }}"
+           onclick="location.href='{{ url_for('bugs_liste', projekt_id=pid) if pid else '#' }}'">
+        <span class="sidebar-item-icon">🐛</span> Warteliste der Bugs
+      </div>
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'retrospektive' else '' }}"
+           onclick="location.href='{{ url_for('retrospektive', projekt_id=pid) if pid else '#' }}'">
+        <span class="sidebar-item-icon">🔄</span> Retrospektive
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Workspace</div>
+      <div class="sidebar-item {{ 'active' if request.endpoint == 'kontakte_liste' else '' }}"
+           onclick="location.href='{{ url_for('kontakte_liste') }}'">
+        <span class="sidebar-item-icon">👥</span> Kontakte
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-new-projekt" onclick="location.href='{{ url_for('neues_projekt') }}'">
+        ＋ Neues Projekt erstellen
+      </button>
+      {% if g.git_branch %}
+      <div style="margin-top:10px; padding:0 12px; font-size:10px; color:rgba(255,255,255,0.3); display:flex; align-items:center; gap:5px;">
+        <span style="font-size:12px;">🌿</span> branch: <span style="color:var(--primary);">{{ g.git_branch }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="{{ url_for('static', filename='kanban.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

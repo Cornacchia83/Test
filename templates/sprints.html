@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Sprints – {{ projekt.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">🏃 Sprints</span>
+  <button class="btn btn-primary btn-sm" data-open-modal="modal-neuer-sprint">＋ Sprint erstellen</button>
+</div>
+<div class="page-body">
+  <div class="sprint-table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sprint</th>
+          <th>Ziel des Sprints</th>
+          <th>Status</th>
+          <th>Verbundene Aufgaben</th>
+          <th>Abgeschlossen</th>
+          <th>Startdatum</th>
+          <th>Enddatum</th>
+          <th style="width:120px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sprints %}
+        <tr>
+          <td><strong>{{ s.name }}</strong></td>
+          <td style="color:var(--text-secondary);font-size:12px;">{{ s.ziel or '–' }}</td>
+          <td>
+            {% if s.ist_aktiv %}
+            <span class="sprint-active-badge">● Aktiv</span>
+            {% else %}
+            <span class="sprint-inactive-badge">Inaktiv</span>
+            {% endif %}
+          </td>
+          <td>
+            {% set cnt = s.aufgaben.count() %}
+            {% if cnt > 0 %}
+            <span class="tag">{{ cnt }} Aufgabe{{ 'n' if cnt != 1 else '' }}</span>
+            {% else %}–{% endif %}
+          </td>
+          <td>
+            {% set done = s.aufgaben.filter_by(status='Erledigt').count() %}
+            {% if cnt > 0 %}
+            <div class="progress-bar-wrap">
+              <div class="progress-bar" style="width:{{ (done/cnt*100)|int }}%"></div>
+            </div>
+            <span style="font-size:11px;color:var(--text-light);">{{ done }}/{{ cnt }}</span>
+            {% else %}–{% endif %}
+          </td>
+          <td style="font-size:12px;">{{ s.startdatum.strftime('%d.%m.%Y') if s.startdatum else '–' }}</td>
+          <td style="font-size:12px;">{{ s.enddatum.strftime('%d.%m.%Y') if s.enddatum else '–' }}</td>
+          <td>
+            <div class="row-actions" style="opacity:1;">
+              {% if not s.ist_aktiv %}
+              <form method="post" action="{{ url_for('sprint_aktivieren', projekt_id=projekt.id, sprint_id=s.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-secondary btn-sm">Aktivieren</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('sprint_loeschen', projekt_id=projekt.id, sprint_id=s.id) }}"
+                    data-confirm="Sprint '{{ s.name }}' löschen? Aufgaben werden in Backlog verschoben." style="display:inline;">
+                <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state" style="padding:40px 0;">
+          <div class="empty-state-icon">🏃</div>
+          <h3>Noch keine Sprints</h3>
+          <p>Erstelle deinen ersten Sprint.</p>
+        </div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL: Neuer Sprint -->
+<div id="modal-neuer-sprint" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🏃 Neuer Sprint</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <form method="post" action="{{ url_for('sprint_erstellen', projekt_id=projekt.id) }}">
+      <div class="form-group">
+        <label>Sprint-Name *</label>
+        <input type="text" name="name" required placeholder="z.B. Sprint 2">
+      </div>
+      <div class="form-group">
+        <label>Ziel des Sprints</label>
+        <textarea name="ziel" rows="2" placeholder="Was soll in diesem Sprint erreicht werden?"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Startdatum</label>
+          <input type="date" name="startdatum">
+        </div>
+        <div class="form-group">
+          <label>Enddatum</label>
+          <input type="date" name="enddatum">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Erstellen</button>
+        <button type="button" class="btn btn-secondary modal-close">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

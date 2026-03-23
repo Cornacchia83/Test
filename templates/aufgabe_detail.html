@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}{{ aufgabe.titel }} – HorizonBoard{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">
+    <a href="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}" style="color:var(--text-light);font-size:14px;">← Aufgaben</a>
+  </span>
+  <div style="display:flex;gap:8px;">
+    <form method="post" action="{{ url_for('aufgabe_loeschen', aufgaben_id=aufgabe.id) }}"
+          data-confirm="Aufgabe '{{ aufgabe.titel }}' wirklich löschen?">
+      <input type="hidden" name="next_url" value="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}">
+      <button type="submit" class="btn btn-danger btn-sm">🗑️ Löschen</button>
+    </form>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="detail-layout">
+    <!-- Left: main content -->
+    <div class="detail-main">
+      <div class="detail-header">
+        <h2 class="detail-title">{{ aufgabe.titel }}</h2>
+        {% if aufgabe.aufgaben_nr %}<span class="nr-tag">{{ aufgabe.aufgaben_nr }}</span>{% endif %}
+      </div>
+
+      <div class="detail-tabs">
+        <div class="detail-tab active" data-tab="einzelheiten">Einzelheiten</div>
+        <div class="detail-tab" data-tab="protokoll">Aktivitätsprotokoll</div>
+        <div class="detail-tab" data-tab="anhaenge">Anhänge ({{ aufgabe.anhaenge|length }})</div>
+      </div>
+
+      <div class="tab-panels">
+        <!-- Tab: Einzelheiten -->
+        <div class="tab-panel" data-panel="einzelheiten">
+          <form method="post" action="{{ url_for('aufgabe_aktualisieren', aufgaben_id=aufgabe.id) }}">
+            <div class="info-card">
+              <div class="info-card-title">Infos</div>
+              <div class="info-grid">
+                <div class="info-field">
+                  <label>Status</label>
+                  <select name="status" class="form-group select-inline">
+                    {% for s in AUFGABEN_STATUS %}
+                    <option value="{{ s }}" {% if aufgabe.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="info-field">
+                  <label>Priorität</label>
+                  <select name="prioritaet" class="form-group select-inline">
+                    {% for p in PRIORITAETEN %}
+                    <option value="{{ p }}" {% if aufgabe.prioritaet == p %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="info-field">
+                  <label>Typ</label>
+                  <select name="aufgaben_typ" class="form-group select-inline">
+                    <option value="">– Kein Typ –</option>
+                    {% for t in AUFGABEN_TYPEN %}
+                    <option value="{{ t }}" {% if aufgabe.aufgaben_typ == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="info-field">
+                  <label>Gesch. Story Points</label>
+                  <input type="number" name="story_points_geschaetzt" min="0"
+                         value="{{ aufgabe.story_points_geschaetzt or '' }}"
+                         style="border:1px solid var(--border);border-radius:4px;padding:6px 10px;width:100%;font-family:var(--ff);font-size:13px;">
+                </div>
+                <div class="info-field">
+                  <label>Aktuelle Story Points</label>
+                  <input type="number" name="story_points_aktuell" min="0"
+                         value="{{ aufgabe.story_points_aktuell or '' }}"
+                         style="border:1px solid var(--border);border-radius:4px;padding:6px 10px;width:100%;font-family:var(--ff);font-size:13px;">
+                </div>
+                <div class="info-field">
+                  <label>Aufgaben-ID</label>
+                  <div class="info-field-value"><span class="nr-tag">{{ aufgabe.aufgaben_nr or '–' }}</span></div>
+                </div>
+                <div class="info-field">
+                  <label>Epic</label>
+                  <select name="epic_id" class="form-group select-inline">
+                    <option value="">– Kein Epic –</option>
+                    {% for e in epics %}
+                    <option value="{{ e.id }}" {% if aufgabe.epic_id == e.id %}selected{% endif %}>{{ e.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="info-field">
+                  <label>Sprint</label>
+                  <select name="sprint_id" class="form-group select-inline">
+                    <option value="">– Backlog –</option>
+                    {% for s in sprints %}
+                    <option value="{{ s.id }}" {% if aufgabe.sprint_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="info-field">
+                  <label>Fälligkeitsdatum</label>
+                  <input type="date" name="faelligkeitsdatum"
+                         value="{{ aufgabe.faelligkeitsdatum.strftime('%Y-%m-%d') if aufgabe.faelligkeitsdatum else '' }}"
+                         style="border:1px solid var(--border);border-radius:4px;padding:6px 10px;width:100%;font-family:var(--ff);font-size:13px;">
+                </div>
+              </div>
+              <div style="margin-top:16px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                  <input type="checkbox" name="ungeplant" {% if aufgabe.ungeplant %}checked{% endif %}> Ungeplant
+                </label>
+              </div>
+            </div>
+
+            <div class="description-card">
+              <div class="description-card-title">Beschreibung</div>
+              <textarea class="description-textarea" name="beschreibung" data-autoresize
+                        placeholder="Beschreibe die Aufgabe...">{{ aufgabe.beschreibung or '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">💾 Speichern</button>
+              <a href="{{ url_for('aufgaben_board', projekt_id=projekt.id) }}" class="btn btn-secondary">Abbrechen</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab: Protokoll -->
+        <div class="tab-panel hidden" data-panel="protokoll">
+          <div class="description-card">
+            <div class="description-card-title">Aktivitätsprotokoll</div>
+            {% for eintrag in aufgabe.protokoll_eintraege %}
+            <div class="protokoll-item">
+              <div class="protokoll-meta">{{ eintrag.erstellt_am.strftime('%d.%m.%Y %H:%M') }}</div>
+              <div class="protokoll-text">{{ eintrag.eintrag }}</div>
+            </div>
+            {% else %}
+            <p style="color:var(--text-light);font-size:13px;font-style:italic;">Noch keine Einträge.</p>
+            {% endfor %}
+            <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+            <form method="post" action="{{ url_for('protokoll_hinzufuegen', aufgaben_id=aufgabe.id) }}">
+              <div class="form-group">
+                <label>Neuer Eintrag</label>
+                <textarea name="protokoll_text" rows="3" placeholder="Schreibe einen Protokolleintrag..." class="description-textarea"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Hinzufügen</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tab: Anhänge -->
+        <div class="tab-panel hidden" data-panel="anhaenge">
+          <div class="description-card">
+            <div class="description-card-title">Anhänge</div>
+            {% for anh in aufgabe.anhaenge %}
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);">
+              <span>📎</span>
+              <a href="{{ url_for('anhang_download', anhang_id=anh.id) }}" style="color:var(--sidebar-accent);font-size:13px;">{{ anh.dateiname_original }}</a>
+              <span style="color:var(--text-light);font-size:11px;">{{ (anh.groesse / 1024)|int }} KB</span>
+            </div>
+            {% else %}
+            <p style="color:var(--text-light);font-size:13px;font-style:italic;">Keine Anhänge.</p>
+            {% endfor %}
+            <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+            <form method="post" action="{{ url_for('anhang_hochladen', aufgaben_id=aufgabe.id) }}" enctype="multipart/form-data">
+              <div class="form-group">
+                <label>Datei hochladen</label>
+                <input type="file" name="datei" style="border:1px solid var(--border);border-radius:4px;padding:6px;width:100%;">
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Hochladen</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: updates panel -->
+    <div class="detail-side">
+      <div class="updates-card">
+        <div class="updates-card-header">📬 Item Updates</div>
+        <div class="update-input-area">
+          <form method="post" action="{{ url_for('protokoll_hinzufuegen', aufgaben_id=aufgabe.id) }}">
+            <textarea name="protokoll_text" placeholder="Schreibe eine Aktualisierung..." rows="3"></textarea>
+            <div style="margin-top:8px;">
+              <button type="submit" class="btn btn-primary btn-sm">Senden</button>
+            </div>
+          </form>
+        </div>
+        <div class="protokoll-list">
+          {% for e in aufgabe.protokoll_eintraege|reverse %}
+          <div class="protokoll-item">
+            <div class="protokoll-meta">🕐 {{ e.erstellt_am.strftime('%d.%m.%Y %H:%M') }}</div>
+            <div class="protokoll-text">{{ e.eintrag }}</div>
+          </div>
+          {% else %}
+          <div class="empty-state" style="padding:30px 0;">
+            <div class="empty-state-icon" style="font-size:32px;">📭</div>
+            <p style="font-size:12px;">Noch keine Aktualisierungen</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Meta Info -->
+      <div class="info-card" style="margin-top:12px;">
+        <div class="info-card-title">Metadaten</div>
+        <div style="font-size:12px;color:var(--text-secondary);display:flex;flex-direction:column;gap:8px;">
+          <div><span style="color:var(--text-light);">Erstellt:</span> {{ aufgabe.erstellt_am.strftime('%d.%m.%Y') }}</div>
+          {% if aufgabe.erledigt_am %}
+          <div><span style="color:var(--text-light);">Erledigt:</span> {{ aufgabe.erledigt_am.strftime('%d.%m.%Y') }}</div>
+          {% endif %}
+          <div>
+            <span style="color:var(--text-light);">Status:</span>
+            <span class="badge {{ aufgabe.status_klasse }}" style="font-size:11px;margin-left:4px;">{{ aufgabe.status }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.select-inline {
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 6px 10px; width: 100%; font-family: var(--ff); font-size: 13px;
+  background: var(--white); color: var(--text-primary);
+}
+.select-inline:focus { outline: none; border-color: var(--sidebar-accent); }
+</style>
+{% endblock %}
+

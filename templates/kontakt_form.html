@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Kontakt bearbeiten' if kontakt else 'Neuer Kontakt' }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">{{ '✏️ Kontakt bearbeiten' if kontakt else '＋ Neuer Kontakt' }}</span>
+</div>
+<div class="page-body">
+  <div class="form-card">
+    <h3>{{ 'Kontakt bearbeiten' if kontakt else 'Neuen Kontakt erstellen' }}</h3>
+    <form method="post">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" name="name" required value="{{ kontakt.name if kontakt else '' }}" placeholder="Vor- und Nachname">
+        </div>
+        <div class="form-group">
+          <label>Firma</label>
+          <input type="text" name="firma" value="{{ kontakt.firma if kontakt else '' }}" placeholder="Firmenname">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>E-Mail</label>
+          <input type="email" name="email" value="{{ kontakt.email if kontakt else '' }}" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input type="text" name="telefon" value="{{ kontakt.telefon if kontakt else '' }}" placeholder="+49 ...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notizen</label>
+        <textarea name="notizen" rows="3">{{ kontakt.notizen if kontakt else '' }}</textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ 'Speichern' if kontakt else 'Erstellen' }}</button>
+        <a href="{{ url_for('kontakte_liste') }}" class="btn btn-secondary">Abbrechen</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>Dashboard</h2>
+    <div class="header-actions">
+        <!-- Platzhalter für Suche/Filter -->
+    </div>
+</header>
+
+<section class="dashboard-grid">
+    {% if projekte %}
+        {# Iteriere direkt über das Dictionary #}
+        {% for proj_id, details in projekte.items() %}
+        <div class="project-container">
+            <h3>{{ details['name'] }} <span class="project-id">({{ proj_id }})</span></h3> {# Zeige Integer ID #}
+            <div class="task-summary">
+                <span>Offen: {{ details['gesamt'] }}</span>
+                <span class="urgency-red">Kritisch: {{ details['kritisch'] }}</span>
+                <span class="urgency-yellow">Iteration: {{ details['iteration'] }}</span>
+                <span class="urgency-green">Backlog: {{ details['backlog'] }}</span>
+            </div>
+            <a href="{{ url_for('projekt_detail', projekt_id=proj_id) }}" class="view-project-link">Zum Projekt →</a>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Noch keine Projekte vorhanden.</p>
+         <p><a href="{{ url_for('neues_projekt_form') }}">Neues Projekt erstellen</a></p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Warteliste der Bugs – {{ projekt.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">🐛 Warteliste der Bugs</span>
+  <button class="btn btn-primary btn-sm" data-open-modal="modal-neuer-bug">＋ Bug melden</button>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-tabs">
+    <span class="toolbar-tab active" data-view="liste">Hauptansicht</span>
+    <span class="toolbar-tab" data-view="formular">Melder-Formular</span>
+  </div>
+</div>
+
+<div class="page-body">
+  <!-- LIST VIEW -->
+  <div data-view-panel="liste">
+    {% for gruppe in BUG_GRUPPEN %}
+    {% set bugs = nach_gruppe.get(gruppe, []) %}
+    {% set gruppe_id = gruppe|lower|replace(' ', '-')|replace('"', '') %}
+    {% set g_klasse = {'Eingehende Bugs': 'group-eingehend', 'Entwicklungsarbeiten': 'group-entwicklung', 'Behoben': 'group-behoben'}.get(gruppe, 'group-verwaltet') %}
+    <div class="group-container {{ g_klasse }}" data-group-id="bug-gruppe-{{ gruppe_id }}">
+      <div class="group-header">
+        <span class="group-toggle">▼</span>
+        <span>{{ '🔴' if gruppe == 'Eingehende Bugs' else ('🟡' if gruppe == 'Entwicklungsarbeiten' else ('🟢' if gruppe == 'Behoben' else '🔵')) }}</span>
+        <span>{{ gruppe }}</span>
+        <span class="group-count">{{ bugs|length }}</span>
+      </div>
+      <div class="group-body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Bug</th>
+              <th>Status</th>
+              <th>Priorität</th>
+              <th>Gemeldet von</th>
+              <th>Bug-ID</th>
+              <th>Erstellt am</th>
+              <th style="width:60px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bugs %}
+            <tr>
+              <td style="font-weight:500;">{{ b.titel }}</td>
+              <td>
+                <span class="badge {{ b.status_klasse }}"
+                      data-inline-field="status" data-entity-type="bug" data-entity-id="{{ b.id }}"
+                      data-options='[{% for s in BUG_STATUS %}{"label":"{{ s }}","value":"{{ s }}","klasse":"{{ BUG_STATUS_KLASSEN[s] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+                  {{ b.status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ b.prio_klasse }}"
+                      data-inline-field="prioritaet" data-entity-type="bug" data-entity-id="{{ b.id }}"
+                      data-options='[{% for p in PRIORITAETEN %}{"label":"{{ p }}","value":"{{ p }}","klasse":"{{ PRIO_KLASSEN[p] }}"}{% if not loop.last %},{% endif %}{% endfor %}]'>
+                  {{ b.prioritaet }}
+                </span>
+              </td>
+              <td style="font-size:12px;">{{ b.gemeldet_von.name if b.gemeldet_von else '–' }}</td>
+              <td><span class="nr-tag">{{ b.bug_nr or '–' }}</span></td>
+              <td style="font-size:12px;">{{ b.erstellt_am.strftime('%d.%m.%Y') }}</td>
+              <td>
+                <div class="row-actions">
+                  <form method="post" action="{{ url_for('bug_loeschen', projekt_id=projekt.id, bug_id=b.id) }}"
+                        data-confirm="Bug '{{ b.titel }}' löschen?" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Löschen">🗑️</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:12px;font-size:12px;">Keine Bugs in dieser Gruppe</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="add-row">＋ Bug hinzufügen</div>
+        <div class="inline-add-form hidden">
+          <form method="post" action="{{ url_for('bug_erstellen', projekt_id=projekt.id) }}">
+            <input type="hidden" name="gruppe" value="{{ gruppe }}">
+            <input type="text" name="titel" placeholder="Bug-Titel..." required>
+            <select name="status">{% for s in BUG_STATUS %}<option>{{ s }}</option>{% endfor %}</select>
+            <select name="prioritaet">{% for p in PRIORITAETEN %}<option>{{ p }}</option>{% endfor %}</select>
+            <button type="submit" class="btn btn-primary btn-sm">Hinzufügen</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- FORMULAR VIEW -->
+  <div data-view-panel="formular" class="hidden">
+    <div style="display:flex;justify-content:center;padding:40px 20px;">
+      <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:40px;max-width:500px;width:100%;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:32px;margin-bottom:8px;">🐛</div>
+          <h2 style="font-size:18px;font-weight:600;">Formular zur Meldung von Bugs</h2>
+          <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;">Bitte melde die Bugs, die du entdeckt hast oder über die du informiert wurdest</p>
+        </div>
+        <form method="post" action="{{ url_for('bug_erstellen', projekt_id=projekt.id) }}">
+          <div class="form-group">
+            <label>Bug-Titel *</label>
+            <input type="text" name="titel" required placeholder="Gib deinem Bug einen Titel" maxlength="200">
+          </div>
+          <div class="form-group">
+            <label>Priorität</label>
+            <select name="prioritaet">
+              {% for p in PRIORITAETEN %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Gruppe</label>
+            <select name="gruppe">
+              {% for g in BUG_GRUPPEN %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Gemeldet von</label>
+            <select name="gemeldet_von_id">
+              <option value="">– Anonym –</option>
+              {% for k in kontakte %}<option value="{{ k.id }}">{{ k.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Beschreibung</label>
+            <textarea name="beschreibung" rows="4" placeholder="Beschreibe den Bug so genau wie möglich..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Senden</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

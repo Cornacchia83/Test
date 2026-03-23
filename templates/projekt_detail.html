@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}{{ projekt.name }} - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <div>
+        <h2>Projekt: {{ projekt.name }}</h2>
+        {% if projekt.erledigt_am %}<span class="projekt-status erledigt">(Erledigt am: {{ projekt.erledigt_am.strftime('%d.%m.%Y') }})</span>
+        {% else %}<span class="projekt-status aktiv">(Aktiv)</span>{% endif %}
+    </div>
+    <div class="header-actions">
+         <a href="{{ url_for('kanban_board', projekt_id=projekt.id) }}" class="action-btn board-link">Board</a>
+         {% if not projekt.erledigt_am %}
+         <form action="{{ url_for('projekt_erledigen', projekt_id=projekt.id) }}" method="post" style="display: inline;">
+             <button type="submit" class="action-btn complete-projekt-btn" title="Projekt erledigen">Erledigen</button>
+         </form>
+         <a href="{{ url_for('neue_aufgabe_form', projekt_id=projekt.id) }}" class="quick-add-btn">+ Neue Aufgabe</a>
+         {% endif %}
+         <form action="{{ url_for('projekt_loeschen', projekt_id=projekt.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Projekt \'{{ projekt.name }}\' und ALLE Daten löschen?');">
+             <button type="submit" class="action-btn delete-projekt-btn" title="Projekt löschen">Löschen</button>
+         </form>
+    </div>
+</header>
+
+<section>
+    {% if projekt.beschreibung %} <p class="projekt-beschreibung">{{ projekt.beschreibung }}</p> {% endif %}
+    <hr class="section-divider">
+
+    {# --- NEU: Kontakte für dieses Projekt --- #}
+    <div class="projekt-kontakte">
+        <h4>Projektkontakte:</h4>
+        {% if projekt.kontakte.count() > 0 %}
+            <ul class="kontakt-liste">
+            {% for kontakt in projekt.kontakte %}
+                <li>
+                    <span class="kontakt-name">{{ kontakt.name }}</span>
+                    {% if kontakt.email %}<a href="mailto:{{ kontakt.email }}" class="kontakt-link">✉</a>{% endif %}
+                     {# Optional: Link zum Bearbeiten des Kontakts #}
+                     <a href="{{ url_for('bearbeite_kontakt_form', kontakt_id=kontakt.id) }}" class="action-btn-small edit-btn" title="Kontakt bearbeiten">✎</a>
+                    {# Formular zum Entfernen des Kontakts aus DIESEM Projekt #}
+                    <form action="{{ url_for('kontakt_von_projekt_entfernen', projekt_id=projekt.id, kontakt_id=kontakt.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="action-btn-small delete-btn" title="Kontakt von Projekt entfernen">✖</button>
+                    </form>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+             <p class="no-items">Diesem Projekt sind noch keine Kontakte zugeordnet.</p>
+        {% endif %}
+
+        {# Formular zum Hinzufügen eines Kontakts zum Projekt #}
+        {% if verfuegbare_kontakte %}
+        <form action="{{ url_for('kontakt_zu_projekt_hinzufuegen', projekt_id=projekt.id) }}" method="post" class="inline-form kontakt-add-form">
+             <label for="kontakt_id_add" class="sr-only">Kontakt hinzufügen:</label> {# sr-only: Nur für Screenreader #}
+            <select name="kontakt_id" id="kontakt_id_add" required>
+                <option value="" disabled selected>Kontakt zum Projekt hinzufügen...</option>
+                {% for kontakt in verfuegbare_kontakte %}
+                    <option value="{{ kontakt.id }}">{{ kontakt.name }} {% if kontakt.firma %}({{ kontakt.firma }}){% endif %}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-small">Hinzufügen</button>
+        </form>
+         {% else %}
+          <p class="no-items" style="margin-top:10px;">Alle vorhandenen Kontakte sind bereits diesem Projekt zugeordnet.</p>
+         {% endif %}
+         <p style="margin-top: 5px; font-size: 0.9em;"><a href="{{ url_for('neuer_kontakt_form') }}">Neuen Kontakt global anlegen...</a></p>
+    </div>
+     <hr class="section-divider">
+    {# --- Ende Kontakte --- #}
+
+
+    {# Aufgabenliste #}
+    <h4>Aufgaben in diesem Projekt:</h4>
+    {% if aufgaben %}
+        <div class="task-list-full">
+            {% for aufgabe in aufgaben %}
+            <div class="task-item-detailed {% if aufgabe.erledigt_am %}task-completed{% endif %} urgency-{{ aufgabe.dringlichkeit.value.lower() }}">
+                <div class="task-info">
+                    <span class="task-title">{{ aufgabe.titel }}</span>
+                    <span class="task-meta">
+                         Spalte: <strong>{{ aufgabe.spalte.name if aufgabe.spalte else 'N/A' }}</strong> |
+                         Dringlichkeit: <span class="urgency-tag urgency-{{ aufgabe.dringlichkeit.value.lower() }}">{{ aufgabe.dringlichkeit.value }}</span>
+                        {% if aufgabe.faelligkeitsdatum %}| Fällig: {{ aufgabe.faelligkeitsdatum.strftime('%d.%m.%Y') }}{% endif %}
+                         {# NEU: "Wartet auf" anzeigen #}
+                        {% if aufgabe.wartet_auf_kontakt %}
+                            | <strong style="color: #dc3545;">Wartet auf: {{ aufgabe.wartet_auf_kontakt.name }}</strong>
+                        {% endif %}
+                        {% if aufgabe.lebenszyklus_phase %}| Phase: {{ aufgabe.lebenszyklus_phase.value }}{% endif %}
+                         {% if aufgabe.erledigt_am %}| Erledigt: {{ aufgabe.erledigt_am.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+                    </span>
+                     {% if aufgabe.beschreibung %} <p class="task-description">{{ aufgabe.beschreibung }}</p> {% endif %}
+                    <div class="task-attachments"><h5>Anhänge:</h5>{% if aufgabe.anhaenge %}<ul>{% for anhang in aufgabe.anhaenge %}<li><a href="{{ url_for('anhang_download', anhang_id=anhang.id) }}" title="Download {{ anhang.dateiname_original }}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="14" height="14" fill="currentColor" style="vertical-align: text-bottom; margin-right: 4px;"><path d="M3.5 0a.5.5 0 0 0-.5.5v9.513a.25.25 0 0 0 .146.227l4.097 1.911a.25.25 0 0 0 .227-.012l4.06-1.9a.25.25 0 0 0 .147-.226V1.625a.125.125 0 0 0-.188-.108l-4 2.5a.125.125 0 0 0 0 .216l4 2.5a.125.125 0 0 0 .188-.108V7.875a.75.75 0 0 1 1.5 0v3.138a1.75 1.75 0 0 1-1.033 1.594l-4.06 1.9a1.75 1.75 0 0 1-1.584-.084L3.033 12.8a1.75 1.75 0 0 1-1.033-1.584V.5a.5.5 0 0 0-.5-.5Z"></path></svg> {{ anhang.dateiname_original }}</a> <span class="file-meta"> ({{ (anhang.groesse / 1024)|round(1) if anhang.groesse else '?' }} KB, {{ anhang.hochgeladen_am.strftime('%d.%m.%y %H:%M') }})</span></li>{% endfor %}</ul>{% else %}<p class="no-items">Keine Anhänge vorhanden.</p>{% endif %}<form action="{{ url_for('anhang_hochladen', aufgaben_id=aufgabe.id) }}" method="post" enctype="multipart/form-data" class="inline-form"><input type="file" name="datei" required class="file-input"><button type="submit" class="btn-small">Hochladen</button></form></div>
+                    <div class="task-protocol"><h5>Protokoll:</h5>{% if aufgabe.protokoll_eintraege %}<ul class="protocol-list">{% for eintrag in aufgabe.protokoll_eintraege %}<li><span class="protocol-timestamp">{{ eintrag.erstellt_am.strftime('%d.%m.%Y %H:%M') }}:</span> <p>{{ eintrag.eintrag }}</p></li>{% endfor %}</ul>{% else %}<p class="no-items">Keine Protokolleinträge vorhanden.</p>{% endif %}<form action="{{ url_for('protokoll_eintrag_hinzufuegen', aufgaben_id=aufgabe.id) }}" method="post" class="inline-form"><textarea name="protokoll_text" rows="2" placeholder="Neuen Protokolleintrag hinzufügen..." required class="protocol-input"></textarea><button type="submit" class="btn-small">Hinzufügen</button></form></div>
+                </div>
+                <div class="task-actions">{% if not aufgabe.erledigt_am %}<form action="{{ url_for('aufgabe_erledigen', aufgaben_id=aufgabe.id) }}" method="post" style="display: inline;"><input type="hidden" name="next_url" value="{{ request.url }}"><button type="submit" class="action-btn complete-btn" title="Erledigen">✔</button></form><a href="{{ url_for('bearbeite_aufgabe_form', aufgaben_id=aufgabe.id) }}" class="action-btn edit-btn" title="Bearbeiten">✎</a>{% endif %}<form action="{{ url_for('aufgabe_loeschen', aufgaben_id=aufgabe.id) }}" method="post" style="display: inline;" onsubmit="confirmDelete(event)"><input type="hidden" name="next_url" value="{{ request.url }}"><button type="submit" class="action-btn delete-btn" title="Löschen">🗑</button></form></div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %} <p>In diesem Projekt gibt es noch keine Aufgaben.</p> {% endif %}
+</section>
+
+{# CSS für diese Seite #}
+<style>
+    /* Header Styles */
+    .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; }
+    .main-header h2 { margin: 0 10px 0 0; }
+    .projekt-status { font-size: 0.9em; font-style: italic; color: #666; margin-left: 5px;}
+    .projekt-status.erledigt { color: #28a745; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .header-actions .action-btn, .header-actions .quick-add-btn { padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; white-space: nowrap; border: 1px solid transparent; }
+    .header-actions .board-link { background-color: #eee; border-color: #d1d1d1; color: #333; }
+    .header-actions .board-link:hover { background-color: #ddd; }
+    .header-actions .quick-add-btn { background-color: #007aff; color: white; border: none; }
+    .header-actions .quick-add-btn:hover { background-color: #005ecb; }
+    .header-actions .complete-projekt-btn { background-color: #e8f5e9; color: #34c759; border-color: #c3e6cb; }
+    .header-actions .complete-projekt-btn:hover { background-color: #d4edda; }
+    .header-actions .delete-projekt-btn { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    .header-actions .delete-projekt-btn:hover { background-color: #f1b0b7; }
+
+    /* Projekt Beschreibung & Trenner */
+    .projekt-beschreibung { margin-top: 5px; color: #555; }
+    hr.section-divider { border: none; border-top: 1px dashed #ccc; margin: 25px 0; }
+
+    /* --- NEU: Projekt Kontakte Styles --- */
+    .projekt-kontakte { margin-bottom: 20px; }
+    .projekt-kontakte h4 { margin-top: 0; margin-bottom: 12px; font-size: 1.1em; font-weight: 600; }
+    .kontakt-liste { list-style: none; padding-left: 0; margin: 0 0 15px 0; }
+    .kontakt-liste li { margin-bottom: 8px; background-color: #f8f9fa; padding: 8px 12px; border-radius: 4px; display: flex; align-items: center; gap: 8px; font-size: 0.95em;}
+    .kontakt-name { font-weight: 500; flex-grow: 1; }
+    .kontakt-link { color: var(--blau-apple); font-size: 1.1em; }
+    .action-btn-small { background: none; border: none; cursor: pointer; padding: 3px; font-size: 1em; color: #888; }
+    .action-btn-small.edit-btn:hover { color: var(--blau-apple); }
+    .action-btn-small.delete-btn:hover { color: var(--rot-fehler); }
+    .kontakt-add-form { margin-top: 15px; }
+    .kontakt-add-form select { flex-grow: 1; padding: 6px 10px; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;} /* Versteckt Label visuell */
+    /* --- Ende Projekt Kontakte --- */
+
+    /* Aufgabenliste Styles */
+    .task-list-full .task-item-detailed { background-color: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; border-left-width: 4px; }
+    .task-item-detailed.urgency-rot { border-left-color: #ff3b30; }
+    .task-item-detailed.urgency-gelb { border-left-color: #ff9500; }
+    .task-item-detailed.urgency-grün { border-left-color: #34c759; }
+    .task-item-detailed.task-completed { background-color: #f7f7f7; opacity: 0.7; border-left-color: #8a8a8e; }
+    .task-item-detailed.task-completed .task-title { text-decoration: line-through; color: #636366; }
+    .task-info { flex-grow: 1; margin-right: 20px;}
+    .task-title { font-weight: 600; display: block; margin-bottom: 5px; }
+    .task-meta { font-size: 0.85em; color: #636366; margin-bottom: 8px; display: block;}
+    .task-description { font-size: 0.9em; color: #3c3c43; margin-top: 5px; white-space: pre-wrap; margin-bottom: 15px; }
+    .urgency-tag { padding: 2px 6px; border-radius: 4px; font-size: 0.8em; display: inline-block; }
+    .urgency-tag.urgency-rot { color: #ff3b30; background-color: #ffebee; }
+    .urgency-tag.urgency-gelb { color: #ff9500; background-color: #fff8e1; }
+    .urgency-tag.urgency-grün { color: #34c759; background-color: #e8f5e9; }
+    .task-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0;}
+    .task-actions .action-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 5px; color: #636366; transition: color 0.2s; }
+    .task-actions .action-btn:hover { color: #007aff; }
+    .task-actions .delete-btn:hover { color: #ff3b30; }
+    .task-actions .complete-btn:hover { color: #34c759; }
+    .task-attachments, .task-protocol { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e0e0e0; }
+    .task-attachments h5, .task-protocol h5 { margin-top: 0; margin-bottom: 10px; font-size: 0.9em; font-weight: 600; color: #555; }
+    .task-attachments ul, .protocol-list { list-style: none; padding-left: 0; margin-bottom: 15px; }
+    .task-attachments li, .protocol-list li { margin-bottom: 8px; font-size: 0.9em; line-height: 1.4; }
+    .task-attachments li a { color: #007aff; text-decoration: none; }
+    .task-attachments li a:hover { text-decoration: underline; }
+    .file-meta { color: #888; font-size: 0.9em; }
+    .protocol-list p { margin: 2px 0 5px 0; white-space: pre-wrap; }
+    .protocol-timestamp { color: #888; font-size: 0.9em; margin-right: 5px; }
+    .no-items { font-style: italic; color: #888; font-size: 0.9em; margin-bottom: 10px; }
+    .inline-form { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+    .inline-form .file-input { border: 1px solid #ccc; border-radius: 4px; padding: 4px 8px; font-size: 0.85em; flex-grow: 1; }
+    .inline-form .protocol-input { border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px; font-size: 0.9em; flex-grow: 1; resize: vertical; min-height: 30px; }
+    .inline-form .btn-small { padding: 5px 12px; font-size: 0.85em; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
+    .inline-form .btn-small:hover { background-color: #5a6268; }
+</style>
+{% endblock %}

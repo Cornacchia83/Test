@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Neues Projekt erstellen - HorizonBoard{% endblock %}
+
+{% block content %}
+<header class="main-header">
+    <h2>Neues Projekt erstellen</h2>
+</header>
+
+<section>
+    <form method="post" action="{{ url_for('projekt_erstellen') }}" class="task-form"> {# Benutzt den gleichen CSS-Style wie das Aufgabenformular #}
+        <div class="form-group">
+            <label for="name">Projektname:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="beschreibung">Beschreibung (Optional):</label>
+            <textarea id="beschreibung" name="beschreibung" rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Projekt erstellen</button>
+            <a href="{{ url_for('dashboard') }}" class="cancel-link">Abbrechen</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Retrospektive – {{ projekt.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <span class="page-title">🔄 Retrospektive</span>
+  <button class="btn btn-primary btn-sm" data-open-modal="modal-neues-feedback">＋ Feedback hinzufügen</button>
+</div>
+
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px;padding:0 4px;">
+    <span style="font-size:12px;color:var(--text-secondary);">Sprint:</span>
+    <div style="display:flex;gap:4px;">
+      {% for s in sprints %}
+      <a href="{{ url_for('retrospektive', projekt_id=projekt.id, sprint_id=s.id) }}"
+         class="toolbar-tab {% if aktiver_sprint and aktiver_sprint.id == s.id %}active{% endif %}"
+         style="padding:0 12px;height:48px;">
+        {{ s.name }} {% if s.ist_aktiv %}●{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  {% if aktiver_sprint %}
+  <div class="group-container group-sprint" style="margin-bottom:20px;" data-group-id="retro-{{ aktiver_sprint.id }}">
+    <div class="group-header">
+      <span class="group-toggle">▼</span>
+      <span>🏃 {{ aktiver_sprint.name }}</span>
+      <span class="group-count">{{ feedbacks|length }} Einträge</span>
+    </div>
+    <div class="group-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Feedback</th>
+            <th>Typ</th>
+            <th style="width:100px;">Wiederholung?</th>
+            <th style="width:100px;">Abstimmung</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in feedbacks %}
+          <tr>
+            <td style="max-width:400px;">{{ f.inhalt }}</td>
+            <td>
+              <span class="badge {{ f.typ_klasse }}">{{ f.typ }}</span>
+            </td>
+            <td style="text-align:center;">
+              {% if f.wiederholung %}✅{% else %}–{% endif %}
+            </td>
+            <td>
+              <button class="btn btn-ghost btn-sm btn-vote {% if true %}{% endif %}" data-feedback-id="{{ f.id }}"
+                      style="display:flex;align-items:center;gap:4px;">
+                👍 <span class="vote-count">{{ f.abstimmung }}</span>
+              </button>
+            </td>
+            <td>
+              <div class="row-actions">
+                <form method="post" action="{{ url_for('feedback_loeschen', feedback_id=f.id) }}"
+                      data-confirm="Feedback löschen?" style="display:inline;">
+                  <button type="submit" class="btn btn-danger btn-icon btn-sm" title="Löschen">🗑️</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:20px;font-size:12px;">
+            Noch kein Feedback für diesen Sprint. Füge das erste hinzu!
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔄</div>
+    <h3>Kein Sprint ausgewählt</h3>
+    <p>Erstelle zuerst einen Sprint, um Retrospektive-Feedback zu sammeln.</p>
+    <a href="{{ url_for('sprints_liste', projekt_id=projekt.id) }}" class="btn btn-primary" style="margin-top:16px;">
+      Zur Sprint-Verwaltung
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- MODAL: Neues Feedback -->
+<div id="modal-neues-feedback" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🔄 Neues Feedback</span>
+      <button class="modal-close">✕</button>
+    </div>
+    <form method="post" action="{{ url_for('feedback_erstellen', projekt_id=projekt.id) }}">
+      <input type="hidden" name="sprint_id" value="{{ aktiver_sprint.id if aktiver_sprint else '' }}">
+      <div class="form-group">
+        <label>Feedback *</label>
+        <textarea name="inhalt" required rows="3" placeholder="Was hast du beobachtet oder gelernt?"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Typ</label>
+          <select name="typ">
+            {% for t in FEEDBACK_TYPEN %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;margin-top:24px;cursor:pointer;">
+            <input type="checkbox" name="wiederholung"> Wiederholung?
+          </label>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Hinzufügen</button>
+        <button type="button" class="btn btn-secondary modal-close">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
